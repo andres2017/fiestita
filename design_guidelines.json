@@ -1,0 +1,114 @@
+{
+  "theme": "LIGHT",
+  "archetype": "6 (Vibrant Play)",
+  "typography": {
+    "primary_font": "Fredoka",
+    "body_font": "Nunito",
+    "theme_fonts": {
+      "videojuegos": "Press Start 2P",
+      "princesas": "Dancing Script",
+      "superheroes": "Bangers",
+      "dinosaurios": "Bowlby One SC",
+      "espacio": "Space Grotesk",
+      "unicornios": "Caveat Brush"
+    },
+    "heading_scale": "text-4xl sm:text-5xl lg:text-6xl",
+    "body_scale": "text-base sm:text-lg lg:text-xl"
+  },
+  "color_palette": {
+    "landing_builder": {
+      "primary": "#FF6B6B",
+      "secondary": "#3B82F6",
+      "background": "#FDF8F5",
+      "surface": "#FFFFFF",
+      "text": "#1F2937",
+      "accent": "#FBBF24"
+    },
+    "themes": {
+      "videojuegos": {
+        "bg": "#111827",
+        "primary": "#22C55E",
+        "text": "#FFFFFF",
+        "accent": "#EF4444"
+      },
+      "princesas": {
+        "bg": "#FDF2F8",
+        "primary": "#EC4899",
+        "text": "#831843",
+        "accent": "#F59E0B"
+      },
+      "superheroes": {
+        "bg": "#EFF6FF",
+        "primary": "#EF4444",
+        "text": "#1E3A8A",
+        "accent": "#EAB308"
+      },
+      "dinosaurios": {
+        "bg": "#F0FDF4",
+        "primary": "#16A34A",
+        "text": "#14532D",
+        "accent": "#D97706"
+      },
+      "espacio": {
+        "bg": "#0F172A",
+        "primary": "#8B5CF6",
+        "text": "#FFFFFF",
+        "accent": "#38BDF8"
+      },
+      "unicornios": {
+        "bg": "#FAF5FF",
+        "primary": "#D946EF",
+        "text": "#4A044E",
+        "accent": "#06B6D4"
+      }
+    }
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-6 sm:p-8 md:p-12",
+    "gap_standard": "gap-6 md:gap-8",
+    "border_radius": "rounded-3xl",
+    "shadows": "shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)]",
+    "builder_layout": "grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-screen",
+    "invitation_layout": "max-w-md mx-auto flex flex-col gap-6 p-4 sm:p-6 min-h-screen relative"
+  },
+  "components": {
+    "buttons": "rounded-full font-bold px-8 py-4 transition-transform hover:-translate-y-1 active:translate-y-0",
+    "inputs": "rounded-2xl border-2 border-gray-200 focus:border-primary focus:ring-primary p-4",
+    "cards": "bg-white rounded-3xl p-6 shadow-sm border-2 border-transparent"
+  },
+  "media": {
+    "hero_landing": "https://images.unsplash.com/photo-1513151233558-d860c5398176",
+    "theme_previews": {
+      "videojuegos": "https://images.unsplash.com/photo-1660507224958-729c18ba1277?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzV8MHwxfHNlYXJjaHwxfHxyZXRybyUyMHZpZGVvJTIwZ2FtZSUyMHBpeGVsfGVufDB8fHx8MTc4MzE3ODkyMXww&ixlib=rb-4.1.0&q=85",
+      "princesas": "https://images.unsplash.com/photo-1650571057388-3921855f66c9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwxfHxwcmluY2VzcyUyMGNhc3RsZSUyMHBpbmt8ZW58MHx8fHwxNzgzMTc4OTIxfDA&ixlib=rb-4.1.0&q=85",
+      "superheroes": "https://images.unsplash.com/photo-1760954185931-40d5b65fbb86?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxzdXBlcmhlcm8lMjBjb21pYyUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzgzMTc4OTIxfDA&ixlib=rb-4.1.0&q=85",
+      "dinosaurios": "https://images.unsplash.com/photo-1743600160621-144e62297185?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxkaW5vc2F1ciUyMGp1bmdsZSUyMGlsbHVzdHJhdGlvbnxlbnwwfHx8fDE3ODMxNzg5MjF8MA&ixlib=rb-4.1.0&q=85",
+      "espacio": "https://images.unsplash.com/photo-1656464868371-602be27fd4c2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwxfHxvdXRlciUyMHNwYWNlJTIwc3RhcnMlMjBwbGFuZXRzfGVufDB8fHx8MTc4MzE3ODkyMXww&ixlib=rb-4.1.0&q=85",
+      "unicornios": "https://images.unsplash.com/photo-1604937455095-ef2fe3d46fcd"
+    }
+  },
+  "interactions": {
+    "hover": "Scale up slightly (scale-105) for interactive elements, playful bounce for theme cards",
+    "transitions": "Smooth transitions (duration-300 ease-out)",
+    "confetti": "Trigger confetti animation on invitation creation success"
+  },
+  "accessibility": {
+    "contrast": "Ensure text over colorful backgrounds maintains 4.5:1 ratio",
+    "focus": "High visibility focus rings (focus:ring-4) on builder inputs",
+    "motion": "Respect prefers-reduced-motion for bounce and confetti effects"
+  },
+  "testing": {
+    "data_testid_rules": "All interactive elements (buttons, inputs, theme selectors) must have data-testid attributes in kebab-case."
+  },
+  "instructions_to_main_agent": [
+    "Build the Landing Page (Spanish) showing the value proposition and a grid of the 6 themes using the provided preview images.",
+    "Implement the Builder Page with a responsive split layout: Left/Top is the form (Name, Age, Date, Time, Venue, Maps/Waze URL, WhatsApp, etc.), Right/Bottom is a live preview of the invitation.",
+    "Implement the 6 themes dynamically. The DOM structure of the public invitation is exactly the SAME for all themes (Hero, Countdown, Event Details, Maps/Waze buttons, RSVP Form, Add-to-Calendar, WhatsApp CTA), but the CSS classes (colors, fonts, backgrounds) change based on the selected theme state.",
+    "Use Google Fonts for the thematic fonts (Press Start 2P, Dancing Script, Bangers, Bowlby One SC, Space Grotesk, Caveat Brush, Fredoka, Nunito). Make sure to inject them in the main index.html.",
+    "The RSVP form in the public invitation must capture: Name, Phone, Attending (Yes/No), Adults count, Kids count, Message. Add a 'Confirm via WhatsApp' button that generates a pre-filled WhatsApp message link.",
+    "The success screen after creation should provide the Public Share Link and a Secret Edit Link.",
+    "Add 'data-testid' to all key interactive elements.",
+    "For the 'Espacio' and 'Videojuegos' themes, default to a dark background with light text. The other 4 are light themes.",
+    "Make the UI extremely playful: use rounded corners (rounded-3xl), bold colors, and soft offset neobrutalist shadows for cards."
+  ]
+}

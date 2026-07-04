@@ -1,0 +1,26 @@
+{
+  "summary": "Full backend + frontend testing of Invitaciones app (ES). All 11 pytest backend tests pass. Frontend E2E flow verified end-to-end: landing (6 theme cards), navigate to /crear with preselected theme, form fill, live preview updates, theme chip switch, save->success screen with public+edit links, public invitation view with countdown, RSVP submission with success, edit flow (load, change theme, save), invalid edit token error, and invitation-not-found page.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py: RSVP endpoint reads doc but only needs script_url; minor efficiency (fine as-is).",
+    "InvitationView: inv-maps-btn / inv-waze-btn are conditional on maps_url/waze_url being present. Builder form does not expose these fields via the listed data-testids, so buttons won't appear unless populated. If desired, add optional inputs (input-maps-url, input-waze-url) in Builder or auto-generate URLs from address.",
+    "Backend allows script_url string via POST but is not surfaced by Builder UI in this test; verified by design (Google Apps Script is user-configured)."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% of critical flows"},
+  "seed_data_creation": "Created 2 TEST_ prefixed invitations during runs and 1 RSVP record. Prefixed with TEST_ for easy identification.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend URL: https://invite-designer-31.preview.emergentagent.com. All 6 themes valid: videojuegos, princesas, superheroes, dinosaurios, espacio, unicornios. Public GET properly hides edit_token and script_url. Maps/Waze buttons only render when respective URLs are set on the invitation (currently no UI input for them in Builder testid list).",
+  "rca of the issue": "No issues found."
+}

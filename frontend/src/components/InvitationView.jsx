@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { THEMES, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_BASE}/api`;
 
 function useCountdown(dateStr, timeStr) {
   const [left, setLeft] = useState(null);
@@ -90,6 +91,20 @@ export const InvitationView = ({ inv, preview = false }) => {
           <p className="inv-subtitle">{copy.subtitle(age)}</p>
           <div className="inv-arrows">▼ ▼ ▼</div>
         </header>
+
+        {/* VIDEO */}
+        {inv.video_url && (
+          <section className="inv-card">
+            <h2 className="inv-section-title">🎥 Video</h2>
+            <video
+              src={`${BACKEND_BASE}${inv.video_url}`}
+              controls
+              playsInline
+              className="inv-video"
+              data-testid="inv-video"
+            />
+          </section>
+        )}
 
         {/* COUNTDOWN */}
         <section className="inv-card inv-countdown-card">
@@ -184,13 +199,13 @@ export const InvitationView = ({ inv, preview = false }) => {
               </div>
               <div className="inv-counts">
                 <div>
-                  <label className="inv-label">Adultos</label>
-                  <input type="number" min="0" className="inv-input" value={form.adultos}
+                  <label className="inv-label" htmlFor="rsvp-adults-input">Adultos</label>
+                  <input id="rsvp-adults-input" type="number" min="0" className="inv-input" value={form.adultos}
                     onChange={(e) => setForm({ ...form, adultos: e.target.value })} data-testid="rsvp-adults-input" />
                 </div>
                 <div>
-                  <label className="inv-label">Niños</label>
-                  <input type="number" min="0" className="inv-input" value={form.ninos}
+                  <label className="inv-label" htmlFor="rsvp-kids-input">Niños</label>
+                  <input id="rsvp-kids-input" type="number" min="0" className="inv-input" value={form.ninos}
                     onChange={(e) => setForm({ ...form, ninos: e.target.value })} data-testid="rsvp-kids-input" />
                 </div>
               </div>

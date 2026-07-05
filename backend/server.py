@@ -1,8 +1,10 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Query, Request, UploadFile, File
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import re
 import logging
 import httpx
 import secrets
@@ -24,6 +26,48 @@ api_router = APIRouter(prefix="/api")
 
 VALID_THEMES = {"videojuegos", "princesas", "superheroes", "dinosaurios", "espacio", "unicornios"}
 
+UPLOADS_DIR = ROOT_DIR / "uploads"
+VIDEOS_DIR = UPLOADS_DIR / "videos"
+VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+
+MAX_VIDEO_BYTES = 50 * 1024 * 1024  # 50MB
+ALLOWED_VIDEO_TYPES = {
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/quicktime": ".mov",
+    "video/ogg": ".ogv",
+}
+VIDEO_URL_RE = re.compile(r"^/uploads/videos/[a-f0-9]{32}\.(mp4|webm|mov|ogv)$")
+
+
+def _is_safe_link_url(url: str) -> bool:
+    """Only allow http(s) links, so stored data can't smuggle a javascript:/data: URI
+    into an <a href> rendered on the public invitation page."""
+    return url == "" or url.startswith("http://") or url.startswith("https://")
+
+
+def _is_valid_script_url(url: str) -> bool:
+    """Restrict Apps Script forwarding to script.google.com, since this URL is user-supplied
+    and otherwise the RSVP endpoint would POST guest data to any attacker-chosen host (SSRF)."""
+    return url == "" or (url.startswith("https://script.google.com/macros/") and url.endswith("/exec"))
+
+
+def _is_valid_video_url(url: str) -> bool:
+    """video_url must point at a file this server generated via /uploads/video, so it can't
+    be used to smuggle an arbitrary external or javascript: URL into the <video> src."""
+    return url == "" or bool(VIDEO_URL_RE.match(url))
+
+
+def _validate_invitation_links(data: "InvitationData") -> None:
+    if not _is_safe_link_url(data.maps_url):
+        raise HTTPException(status_code=400, detail="Link de Google Maps inválido")
+    if not _is_safe_link_url(data.waze_url):
+        raise HTTPException(status_code=400, detail="Link de Waze inválido")
+    if not _is_valid_script_url(data.script_url):
+        raise HTTPException(status_code=400, detail="La URL de Google Apps Script debe ser de script.google.com y terminar en /exec")
+    if not _is_valid_video_url(data.video_url):
+        raise HTTPException(status_code=400, detail="Video inválido")
+
 
 class InvitationData(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -42,6 +86,7 @@ class InvitationData(BaseModel):
     message: str = ""
     script_url: str = ""
     host_names: str = ""
+    video_url: str = ""
 
 
 class Invitation(InvitationData):
@@ -69,6 +114,7 @@ async def root():
 async def create_invitation(data: InvitationData):
     if data.theme not in VALID_THEMES:
         raise HTTPException(status_code=400, detail="Temática inválida")
+    _validate_invitation_links(data)
     inv = Invitation(**data.model_dump())
     await db.invitations.insert_one(inv.model_dump())
     return {"id": inv.id, "edit_token": inv.edit_token}
@@ -101,8 +147,30 @@ async def update_invitation(inv_id: str, data: InvitationData, token: str = Quer
         raise HTTPException(status_code=403, detail="Link de edición inválido")
     if data.theme not in VALID_THEMES:
         raise HTTPException(status_code=400, detail="Temática inválida")
+    _validate_invitation_links(data)
     await db.invitations.update_one({"id": inv_id}, {"$set": data.model_dump()})
     return {"ok": True}
+
+
+@api_router.post("/uploads/video")
+async def upload_video(request: Request, file: UploadFile = File(...)):
+    ext = ALLOWED_VIDEO_TYPES.get(file.content_type)
+    if not ext:
+        raise HTTPException(status_code=400, detail="Formato de video no soportado. Usa MP4, WebM, MOV u OGG.")
+
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_VIDEO_BYTES + 5_000_000:
+        raise HTTPException(status_code=413, detail="El video no puede pesar más de 50MB.")
+
+    contents = await file.read(MAX_VIDEO_BYTES + 1)
+    if len(contents) > MAX_VIDEO_BYTES:
+        raise HTTPException(status_code=413, detail="El video no puede pesar más de 50MB.")
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    with open(VIDEOS_DIR / filename, "wb") as f:
+        f.write(contents)
+
+    return {"video_url": f"/uploads/videos/{filename}"}
 
 
 @api_router.post("/invitations/{inv_id}/rsvp")
@@ -137,6 +205,7 @@ async def create_rsvp(inv_id: str, rsvp: RsvpCreate):
 
 
 app.include_router(api_router)
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

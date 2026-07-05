@@ -25,6 +25,7 @@ Usuario aportó ejemplo: invitación HTML estilo videojuego retro (cuenta regres
 - [x] Edición con token, validación 403
 - [x] Reenvío de RSVP a Google Apps Script (opcional, campo avanzado)
 - [x] Testeado E2E: backend 11/11, frontend 100% flujos críticos (iteration_1)
+- [x] Subir 1 video a la invitación (julio 2026): `POST /api/uploads/video` guarda el archivo en disco (`backend/uploads/videos/`, servido vía `/uploads`), valida tipo MIME (mp4/webm/mov/ogg) y tamaño (máx. 50MB); `video_url` en la invitación solo acepta rutas propias (regex), no URLs externas, para evitar SSRF/XSS. Sección de video en Builder (subir/quitar/preview) e InvitationView (reproductor).
 
 ## Backlog priorizado
 - P1: Panel de confirmaciones dentro del link de edición (ya se guardan en Mongo)

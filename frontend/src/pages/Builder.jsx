@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { THEME_LIST } from "../themes";
 import { InvitationView } from "../components/InvitationView";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_BASE}/api`;
+const MAX_VIDEO_MB = 50;
 
 const EMPTY = {
   theme: "videojuegos",
@@ -23,6 +25,7 @@ const EMPTY = {
   message: "",
   script_url: "",
   host_names: "",
+  video_url: "",
 };
 
 export default function Builder({ editMode = false }) {
@@ -34,6 +37,7 @@ export default function Builder({ editMode = false }) {
   const [created, setCreated] = useState(null);
   const [loadError, setLoadError] = useState(false);
   const [tab, setTab] = useState("form");
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   useEffect(() => {
     if (editMode && id && token) {
@@ -44,6 +48,30 @@ export default function Builder({ editMode = false }) {
   }, [editMode, id, token]);
 
   const set = (k) => (e) => setInv({ ...inv, [k]: e.target.value });
+
+  const handleVideoChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+      toast.error(`El video no puede pesar más de ${MAX_VIDEO_MB}MB.`);
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploadingVideo(true);
+    try {
+      const r = await axios.post(`${API}/uploads/video`, formData);
+      setInv((prev) => ({ ...prev, video_url: r.data.video_url }));
+      toast.success("¡Video subido! 🎥");
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "No se pudo subir el video. Inténtalo de nuevo.");
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const removeVideo = () => setInv((prev) => ({ ...prev, video_url: "" }));
 
   const save = async (e) => {
     e.preventDefault();
@@ -57,16 +85,20 @@ export default function Builder({ editMode = false }) {
         const r = await axios.post(`${API}/invitations`, payload);
         setCreated(r.data);
       }
-    } catch {
-      toast.error("No se pudo guardar. Revisa los datos e inténtalo de nuevo.");
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "No se pudo guardar. Revisa los datos e inténtalo de nuevo.");
     } finally {
       setSaving(false);
     }
   };
 
-  const copyText = (text, label) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copiado 📋`);
+  const copyText = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copiado 📋`);
+    } catch {
+      toast.error(`No se pudo copiar ${label.toLowerCase()}. Selecciónalo y cópialo manualmente.`);
+    }
   };
 
   if (loadError) {
@@ -142,76 +174,105 @@ export default function Builder({ editMode = false }) {
 
           <div className="field-row">
             <div className="field">
-              <label className="field-label">Nombre del peque *</label>
-              <input required value={inv.child_name} onChange={set("child_name")} placeholder="Gabriel" data-testid="input-child-name" />
+              <label className="field-label" htmlFor="input-child-name">Nombre del peque *</label>
+              <input id="input-child-name" required value={inv.child_name} onChange={set("child_name")} placeholder="Gabriel" data-testid="input-child-name" />
             </div>
             <div className="field field-sm">
-              <label className="field-label">Edad que cumple *</label>
-              <input required type="number" min="1" max="15" value={inv.age} onChange={set("age")} placeholder="2" data-testid="input-age" />
+              <label className="field-label" htmlFor="input-age">Edad que cumple *</label>
+              <input id="input-age" required type="number" min="1" max="15" value={inv.age} onChange={set("age")} placeholder="2" data-testid="input-age" />
             </div>
           </div>
 
           <div className="field">
-            <label className="field-label">Nombre completo (opcional)</label>
-            <input value={inv.child_full_name} onChange={set("child_full_name")} placeholder="Gabriel Alejandro Vargas Cetina" data-testid="input-full-name" />
+            <label className="field-label" htmlFor="input-full-name">Nombre completo (opcional)</label>
+            <input id="input-full-name" value={inv.child_full_name} onChange={set("child_full_name")} placeholder="Gabriel Alejandro Vargas Cetina" data-testid="input-full-name" />
           </div>
 
           <div className="field-row">
             <div className="field">
-              <label className="field-label">Fecha de la fiesta *</label>
-              <input required type="date" value={inv.event_date} onChange={set("event_date")} data-testid="input-date" />
+              <label className="field-label" htmlFor="input-date">Fecha de la fiesta *</label>
+              <input id="input-date" required type="date" value={inv.event_date} onChange={set("event_date")} data-testid="input-date" />
             </div>
             <div className="field">
-              <label className="field-label">Hora *</label>
-              <input required type="time" value={inv.event_time} onChange={set("event_time")} data-testid="input-time" />
+              <label className="field-label" htmlFor="input-time">Hora *</label>
+              <input id="input-time" required type="time" value={inv.event_time} onChange={set("event_time")} data-testid="input-time" />
             </div>
           </div>
 
           <div className="field">
-            <label className="field-label">Lugar *</label>
-            <input required value={inv.venue} onChange={set("venue")} placeholder="Salón de fiestas Villa Feliz" data-testid="input-venue" />
+            <label className="field-label" htmlFor="input-venue">Lugar *</label>
+            <input id="input-venue" required value={inv.venue} onChange={set("venue")} placeholder="Salón de fiestas Villa Feliz" data-testid="input-venue" />
           </div>
           <div className="field">
-            <label className="field-label">Dirección</label>
-            <input value={inv.address} onChange={set("address")} placeholder="Carrera 8 # 21-66, Centro, Tunja" data-testid="input-address" />
+            <label className="field-label" htmlFor="input-address">Dirección</label>
+            <input id="input-address" value={inv.address} onChange={set("address")} placeholder="Carrera 8 # 21-66, Centro, Tunja" data-testid="input-address" />
           </div>
           <div className="field">
-            <label className="field-label">Indicaciones para llegar</label>
-            <textarea rows="3" value={inv.how_arrive} onChange={set("how_arrive")} placeholder="🚶 A pie: a pocas cuadras de la plaza... 🚗 En carro: toma la Carrera 9..." data-testid="input-how-arrive" />
-          </div>
-
-          <div className="field-row">
-            <div className="field">
-              <label className="field-label">Link de Google Maps</label>
-              <input value={inv.maps_url} onChange={set("maps_url")} placeholder="https://maps.google.com/..." data-testid="input-maps-url" />
-            </div>
-            <div className="field">
-              <label className="field-label">Link de Waze</label>
-              <input value={inv.waze_url} onChange={set("waze_url")} placeholder="https://waze.com/ul?..." data-testid="input-waze-url" />
-            </div>
-          </div>
-
-          <div className="field">
-            <label className="field-label">Mensaje personal</label>
-            <textarea rows="3" value={inv.message} onChange={set("message")} placeholder="Con la alegría de sus papás, queremos que nos acompañes..." data-testid="input-message" />
+            <label className="field-label" htmlFor="input-how-arrive">Indicaciones para llegar</label>
+            <textarea id="input-how-arrive" rows="3" value={inv.how_arrive} onChange={set("how_arrive")} placeholder="🚶 A pie: a pocas cuadras de la plaza... 🚗 En carro: toma la Carrera 9..." data-testid="input-how-arrive" />
           </div>
 
           <div className="field-row">
             <div className="field">
-              <label className="field-label">WhatsApp para confirmaciones</label>
-              <input value={inv.whatsapp} onChange={set("whatsapp")} placeholder="573001234567" data-testid="input-whatsapp" />
+              <label className="field-label" htmlFor="input-maps-url">Link de Google Maps</label>
+              <input id="input-maps-url" value={inv.maps_url} onChange={set("maps_url")} placeholder="https://maps.google.com/..." data-testid="input-maps-url" />
             </div>
             <div className="field">
-              <label className="field-label">Firma (opcional)</label>
-              <input value={inv.host_names} onChange={set("host_names")} placeholder="Papás de Gabriel" data-testid="input-hosts" />
+              <label className="field-label" htmlFor="input-waze-url">Link de Waze</label>
+              <input id="input-waze-url" value={inv.waze_url} onChange={set("waze_url")} placeholder="https://waze.com/ul?..." data-testid="input-waze-url" />
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="input-message">Mensaje personal</label>
+            <textarea id="input-message" rows="3" value={inv.message} onChange={set("message")} placeholder="Con la alegría de sus papás, queremos que nos acompañes..." data-testid="input-message" />
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="input-video">Video para tu invitación (opcional)</label>
+            {inv.video_url ? (
+              <div className="video-upload-preview">
+                <video
+                  src={`${BACKEND_BASE}${inv.video_url}`}
+                  controls
+                  className="video-upload-player"
+                  data-testid="video-upload-preview"
+                />
+                <button type="button" className="btn-outline" onClick={removeVideo} data-testid="remove-video-btn">
+                  🗑️ Quitar video
+                </button>
+              </div>
+            ) : (
+              <input
+                id="input-video"
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime,video/ogg"
+                onChange={handleVideoChange}
+                disabled={uploadingVideo}
+                data-testid="input-video"
+              />
+            )}
+            <p className="field-help">
+              {uploadingVideo ? "Subiendo video... 🎬" : "Formatos: MP4, WebM, MOV. Máximo 50MB."}
+            </p>
+          </div>
+
+          <div className="field-row">
+            <div className="field">
+              <label className="field-label" htmlFor="input-whatsapp">WhatsApp para confirmaciones</label>
+              <input id="input-whatsapp" value={inv.whatsapp} onChange={set("whatsapp")} placeholder="573001234567" data-testid="input-whatsapp" />
+            </div>
+            <div className="field">
+              <label className="field-label" htmlFor="input-hosts">Firma (opcional)</label>
+              <input id="input-hosts" value={inv.host_names} onChange={set("host_names")} placeholder="Papás de Gabriel" data-testid="input-hosts" />
             </div>
           </div>
 
           <details className="advanced">
             <summary>⚙️ Avanzado: guardar confirmaciones en Google Sheets</summary>
             <div className="field">
-              <label className="field-label">URL de tu Google Apps Script (termina en /exec)</label>
-              <input value={inv.script_url} onChange={set("script_url")} placeholder="https://script.google.com/macros/s/.../exec" data-testid="input-script-url" />
+              <label className="field-label" htmlFor="input-script-url">URL de tu Google Apps Script (termina en /exec)</label>
+              <input id="input-script-url" value={inv.script_url} onChange={set("script_url")} placeholder="https://script.google.com/macros/s/.../exec" data-testid="input-script-url" />
               <p className="field-help">
                 Si la agregas, cada confirmación llegará a tu hoja de Google Sheets automáticamente.
               </p>

@@ -3,7 +3,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://invite-designer-31.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8000').rstrip('/')
 API = f"{BASE_URL}/api"
 
 
@@ -102,6 +102,36 @@ class TestUpdate:
                              "event_date": "2026-01-01", "event_time": "10:00"
                          })
         assert r.status_code == 403
+
+
+# --- Video Upload ---
+class TestVideoUpload:
+    def test_upload_valid_video(self):
+        files = {"file": ("clip.mp4", b"\x00\x00\x00\x18ftypmp42" + b"0" * 1000, "video/mp4")}
+        r = requests.post(f"{API}/uploads/video", files=files)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert data["video_url"].startswith("/uploads/videos/")
+        assert data["video_url"].endswith(".mp4")
+
+        # The uploaded file is actually served back
+        g = requests.get(f"{BASE_URL}{data['video_url']}")
+        assert g.status_code == 200
+
+    def test_upload_rejects_bad_type(self):
+        files = {"file": ("evil.exe", b"MZ", "application/octet-stream")}
+        r = requests.post(f"{API}/uploads/video", files=files)
+        assert r.status_code == 400
+
+    def test_invitation_rejects_external_video_url(self, created_invitation):
+        payload = {
+            "theme": "espacio", "child_name": "X", "age": 5,
+            "event_date": "2026-01-01", "event_time": "10:00",
+            "video_url": "https://evil.com/x.mp4",
+        }
+        r = requests.put(f"{API}/invitations/{created_invitation['id']}",
+                         params={"token": created_invitation["edit_token"]}, json=payload)
+        assert r.status_code == 400
 
 
 # --- RSVP ---

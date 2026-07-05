@@ -16,6 +16,15 @@ export default function InvitationPage() {
       .catch(() => setError(true));
   }, [id]);
 
+  useEffect(() => {
+    if (inv?.child_name) {
+      document.title = `🎈 Cumple de ${inv.child_name} - Fiestita`;
+    }
+    return () => {
+      document.title = "Fiestita";
+    };
+  }, [inv]);
+
   if (error) {
     return (
       <div className="builder-error" data-testid="invitation-not-found">

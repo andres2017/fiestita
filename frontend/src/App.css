@@ -169,6 +169,48 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
   font-weight: 800; cursor: pointer; font-family: 'Fredoka', sans-serif;
 }
 .success-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
+.pay-note { font-size: 0.85rem; color: #6B7280; margin-top: 1.25rem; }
+
+/* ===== PAGO / PUBLICACIÓN ===== */
+.pay-banner { border: 3px solid #1F2937; border-radius: 1.25rem; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.pay-banner p { margin: 0 0 0.6rem; font-size: 0.92rem; }
+.pay-banner-warn { background: #FEF3C7; box-shadow: 5px 5px 0 rgba(217,119,6,0.3); }
+.pay-banner-ok { background: #D1FAE5; box-shadow: 5px 5px 0 rgba(22,163,74,0.3); }
+.pay-banner .link-row input { background: #fff; }
+
+/* ===== SUBIDA DE FOTOS/VIDEO ===== */
+.media-upload-btns { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.media-upload-btn {
+  border: 2px dashed #1F2937; border-radius: 9999px; padding: 0.5rem 1.1rem; cursor: pointer;
+  font-weight: 800; font-size: 0.85rem; font-family: 'Fredoka', sans-serif; background: #fff;
+  transition: background-color 0.2s ease-out;
+}
+.media-upload-btn:hover { background: var(--l-accent); }
+.media-uploading { font-size: 0.85rem; font-weight: 700; color: #6B7280; }
+.media-thumbs { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.8rem; }
+.media-thumb {
+  position: relative; width: 84px; height: 84px; border: 2px solid #1F2937; border-radius: 0.9rem; overflow: hidden;
+}
+.media-thumb img, .media-thumb video { width: 100%; height: 100%; object-fit: cover; }
+.media-thumb-tag { position: absolute; bottom: 4px; left: 6px; font-size: 0.9rem; }
+.media-thumb-remove {
+  position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid #1F2937; background: #fff; font-size: 0.7rem; font-weight: 800; cursor: pointer;
+  display: grid; place-items: center; line-height: 1;
+}
+.media-thumb-remove:hover { background: #FCA5A5; }
+
+/* ===== GALERÍA EN INVITACIÓN ===== */
+.inv-video {
+  width: 100%; border-radius: 1rem; border: 2px solid var(--inv-accent);
+  margin-bottom: 0.9rem; background: #000; display: block;
+}
+.inv-photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.inv-photo-grid img {
+  width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 1rem;
+  border: 2px solid var(--inv-accent);
+}
+.inv-photo-grid img:first-child:nth-last-child(odd) { grid-column: span 2; aspect-ratio: 16/10; }
 
 @keyframes bounce-in {
   0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); }

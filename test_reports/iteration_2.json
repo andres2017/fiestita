@@ -1,0 +1,28 @@
+{
+  "summary": "Iteration 2: verified media upload, Wompi paywall (checkout signature, webhook, paid GET), config endpoint, removed 'Made with Emergent' badge, and Sofía/Nombre y apellidos placeholders. All 10 pytest backend tests pass. All frontend flows verified end-to-end including photo upload+persistence+remove, redirect to checkout.wompi.co with correct params, webhook-driven paid unlock, and /i/{id} rendering with inv-photo-grid.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter2_media_paywall.py",
+    "/app/test_reports/pytest/iter2_results.xml"
+  ],
+  "action_items": [
+    "iteration_1 test file (/app/backend/tests/backend_test.py) has one test (TestUpdate.test_update_valid_token) that now fails because GET /api/invitations/{id} of an unpaid invitation returns 402 (correct new behavior). Update or split that test if regression suite is re-run."
+  ],
+  "critical_code_review_comments": [
+    "server.py: /api/media/{path:path} serves any stored media without checking whether the parent invitation is paid; a user with a media path can access photos even before payment (data-exposure risk if paths are guessable, though UUIDs mitigate).",
+    "Public /api/invitations/{id} returns 402 with error detail 'Esta invitación aún no ha sido publicada' — front-end InvitationPage handles this via invitation-unpublished testid (verified).",
+    "Webhook uses timestamp+events_secret concatenation but does not validate timestamp freshness — replay attacks with a captured valid payload possible. Consider rejecting timestamps older than N minutes.",
+    "init_storage caches storage_key globally without expiration; if key expires, all media requests fail until backend restarts."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter2_media_paywall.py"
+  ],
+  "success_rate": {"backend": "100% (10/10)", "frontend": "100% of new features"},
+  "test_credentials": "No auth in app. Wompi PRODUCTION keys in /app/backend/.env — real payments not executed. Events secret used to sign a fake webhook and mark test invitation 71bff68a-fe6b-47a4-87e7-be7a2aea475a as paid.",
+  "seed_data_creation": "Created 2 TEST_ invitations during backend tests. Marked frontend test invitation 71bff68a-fe6b-47a4-87e7-be7a2aea475a as paid via webhook simulation. Uploaded 2 test JPEGs.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend URL: https://invite-designer-31.preview.emergentagent.com. Wompi PROD keys in /app/backend/.env. Do NOT execute real Wompi payments. To simulate payment: (1) call POST /api/invitations/{id}/checkout?token=... to get wompi_reference, (2) POST /api/wompi/webhook with signature.properties=['transaction.id','transaction.status','transaction.amount_in_cents'] and checksum=sha256(txid+status+amount+timestamp+WOMPI_EVENTS_SECRET). Amount must equal 5500000 and currency=COP. Old iteration_1 backend_test.py has an update test that now fails because unpaid GET returns 402 — expected new behavior.",
+  "rca of the issue": "N/A — no issues found."
+}

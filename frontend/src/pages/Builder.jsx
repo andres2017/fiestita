@@ -23,6 +23,7 @@ const EMPTY = {
   message: "",
   script_url: "",
   host_names: "",
+  media: [],
 };
 
 export default function Builder({ editMode = false }) {
@@ -34,6 +35,13 @@ export default function Builder({ editMode = false }) {
   const [created, setCreated] = useState(null);
   const [loadError, setLoadError] = useState(false);
   const [tab, setTab] = useState("form");
+  const [uploading, setUploading] = useState(false);
+  const [price, setPrice] = useState(null);
+  const [paying, setPaying] = useState(false);
+
+  useEffect(() => {
+    axios.get(`${API}/config`).then((r) => setPrice(r.data.price_cents)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (editMode && id && token) {
@@ -44,6 +52,57 @@ export default function Builder({ editMode = false }) {
   }, [editMode, id, token]);
 
   const set = (k) => (e) => setInv({ ...inv, [k]: e.target.value });
+
+  const priceLabel = price ? `$${(price / 100).toLocaleString("es-CO")} COP` : "...";
+
+  const uploadFiles = async (e, mtype) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    for (const f of files) {
+      const photos = (inv.media || []).filter((m) => m.type === "photo");
+      if (mtype === "photo" && photos.length >= 5) {
+        toast.error("Máximo 5 fotos por invitación");
+        break;
+      }
+      setUploading(true);
+      try {
+        const fd = new FormData();
+        fd.append("file", f);
+        const r = await axios.post(`${API}/media/upload`, fd);
+        setInv((prev) => {
+          let media = prev.media || [];
+          if (r.data.type === "video") media = media.filter((m) => m.type !== "video");
+          return { ...prev, media: [...media, r.data] };
+        });
+        toast.success(r.data.type === "video" ? "Video subido 🎬" : "Foto subida 📸");
+      } catch (err) {
+        toast.error(err.response?.data?.detail || "No se pudo subir el archivo");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const removeMedia = (mid) => setInv({ ...inv, media: (inv.media || []).filter((m) => m.id !== mid) });
+
+  const startPayment = async (invId, tok) => {
+    setPaying(true);
+    try {
+      const r = await axios.post(`${API}/invitations/${invId}/checkout`, null, { params: { token: tok } });
+      const params = new URLSearchParams({
+        "public-key": r.data.public_key,
+        currency: r.data.currency,
+        "amount-in-cents": String(r.data.amount_in_cents),
+        reference: r.data.reference,
+        "signature:integrity": r.data.signature,
+        "redirect-url": `${window.location.origin}/pago/${invId}?token=${tok}`,
+      });
+      window.location.href = `${r.data.checkout_url}?${params.toString()}`;
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "No se pudo iniciar el pago");
+      setPaying(false);
+    }
+  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -80,25 +139,19 @@ export default function Builder({ editMode = false }) {
   }
 
   if (created) {
-    const publicUrl = `${window.location.origin}/i/${created.id}`;
     const editUrl = `${window.location.origin}/editar/${created.id}/${created.edit_token}`;
     return (
       <div className="success-screen" data-testid="success-screen">
         <div className="success-card">
           <div className="success-confetti">🎉🎂🎈✨🎁</div>
           <h1>¡Tu invitación está lista!</h1>
-          <p>Comparte el link con tus invitados y guarda el link secreto para editarla cuando quieras.</p>
-
-          <div className="link-box">
-            <label>🔗 Link para invitados (compártelo)</label>
-            <div className="link-row">
-              <input readOnly value={publicUrl} data-testid="public-link-input" />
-              <button onClick={() => copyText(publicUrl, "Link público")} data-testid="copy-public-link-btn">Copiar</button>
-            </div>
-          </div>
+          <p>
+            Guarda tu link secreto para editarla cuando quieras. Para obtener el link público y
+            compartirla con los invitados, publícala pagando <strong>{priceLabel}</strong> con Wompi. Sin registro.
+          </p>
 
           <div className="link-box link-box-secret">
-            <label>🔒 Link secreto de edición (¡no lo compartas!)</label>
+            <label>🔒 Link secreto de edición (¡guárdalo, no lo compartas!)</label>
             <div className="link-row">
               <input readOnly value={editUrl} data-testid="edit-link-input" />
               <button onClick={() => copyText(editUrl, "Link de edición")} data-testid="copy-edit-link-btn">Copiar</button>
@@ -106,9 +159,12 @@ export default function Builder({ editMode = false }) {
           </div>
 
           <div className="success-actions">
-            <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" data-testid="view-invitation-btn">👀 Ver invitación</a>
-            <button className="btn-outline" onClick={() => navigate(`/editar/${created.id}/${created.edit_token}`)} data-testid="go-edit-btn">✏️ Seguir editando</button>
+            <button className="btn-primary" disabled={paying} onClick={() => startPayment(created.id, created.edit_token)} data-testid="pay-publish-btn">
+              {paying ? "Redirigiendo a Wompi..." : `💳 Publicar por ${priceLabel}`}
+            </button>
+            <button className="btn-outline" onClick={() => { setCreated(null); navigate(`/editar/${created.id}/${created.edit_token}`); }} data-testid="go-edit-btn">✏️ Seguir editando</button>
           </div>
+          <p className="pay-note">Pago seguro procesado por Wompi (tarjetas, PSE, Nequi y más).</p>
         </div>
       </div>
     );
@@ -128,6 +184,25 @@ export default function Builder({ editMode = false }) {
         <form onSubmit={save} className={`builder-form ${tab === "form" ? "" : "hide-mobile"}`}>
           <h1>{editMode ? "✏️ Edita tu invitación" : "🎨 Crea tu invitación"}</h1>
 
+          {editMode && (
+            inv.paid ? (
+              <div className="pay-banner pay-banner-ok" data-testid="paid-banner">
+                <p>✅ <strong>Invitación publicada.</strong> Comparte este link:</p>
+                <div className="link-row">
+                  <input readOnly value={`${window.location.origin}/i/${id}`} data-testid="published-link-input" />
+                  <button type="button" onClick={() => copyText(`${window.location.origin}/i/${id}`, "Link público")} data-testid="copy-published-link-btn">Copiar</button>
+                </div>
+              </div>
+            ) : (
+              <div className="pay-banner pay-banner-warn" data-testid="unpaid-banner">
+                <p>🔒 <strong>Aún no publicada.</strong> Publícala para obtener el link y compartirla.</p>
+                <button type="button" className="btn-primary-sm" disabled={paying} onClick={() => startPayment(id, token)} data-testid="pay-publish-edit-btn">
+                  {paying ? "Redirigiendo..." : `💳 Publicar por ${priceLabel}`}
+                </button>
+              </div>
+            )
+          )}
+
           <label className="field-label">Temática</label>
           <div className="theme-picker" data-testid="theme-picker">
             {THEME_LIST.map((t) => (
@@ -143,7 +218,7 @@ export default function Builder({ editMode = false }) {
           <div className="field-row">
             <div className="field">
               <label className="field-label">Nombre del peque *</label>
-              <input required value={inv.child_name} onChange={set("child_name")} placeholder="Gabriel" data-testid="input-child-name" />
+              <input required value={inv.child_name} onChange={set("child_name")} placeholder="Sofía" data-testid="input-child-name" />
             </div>
             <div className="field field-sm">
               <label className="field-label">Edad que cumple *</label>
@@ -153,7 +228,7 @@ export default function Builder({ editMode = false }) {
 
           <div className="field">
             <label className="field-label">Nombre completo (opcional)</label>
-            <input value={inv.child_full_name} onChange={set("child_full_name")} placeholder="Gabriel Alejandro Vargas Cetina" data-testid="input-full-name" />
+            <input value={inv.child_full_name} onChange={set("child_full_name")} placeholder="Nombre y apellidos completos" data-testid="input-full-name" />
           </div>
 
           <div className="field-row">
@@ -173,7 +248,7 @@ export default function Builder({ editMode = false }) {
           </div>
           <div className="field">
             <label className="field-label">Dirección</label>
-            <input value={inv.address} onChange={set("address")} placeholder="Carrera 8 # 21-66, Centro, Tunja" data-testid="input-address" />
+            <input value={inv.address} onChange={set("address")} placeholder="Calle 10 # 5-20, tu ciudad" data-testid="input-address" />
           </div>
           <div className="field">
             <label className="field-label">Indicaciones para llegar</label>
@@ -203,8 +278,37 @@ export default function Builder({ editMode = false }) {
             </div>
             <div className="field">
               <label className="field-label">Firma (opcional)</label>
-              <input value={inv.host_names} onChange={set("host_names")} placeholder="Papás de Gabriel" data-testid="input-hosts" />
+              <input value={inv.host_names} onChange={set("host_names")} placeholder="Papás de tu peque" data-testid="input-hosts" />
             </div>
+          </div>
+
+          <div className="field">
+            <label className="field-label">📸 Fotos y video del peque</label>
+            <p className="field-help">Hasta 5 fotos (máx 10MB c/u) y 1 video corto (máx 50MB). Aparecerán en la invitación.</p>
+            <div className="media-upload-btns">
+              <label className="media-upload-btn" data-testid="upload-photo-label">
+                📷 Subir fotos
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden onChange={(e) => uploadFiles(e, "photo")} data-testid="upload-photo-input" />
+              </label>
+              <label className="media-upload-btn" data-testid="upload-video-label">
+                🎬 Subir video
+                <input type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(e) => uploadFiles(e, "video")} data-testid="upload-video-input" />
+              </label>
+              {uploading && <span className="media-uploading">Subiendo...</span>}
+            </div>
+            {(inv.media || []).length > 0 && (
+              <div className="media-thumbs" data-testid="media-thumbs">
+                {inv.media.map((m) => (
+                  <div key={m.id} className="media-thumb">
+                    {m.type === "photo"
+                      ? <img src={`${API}/media/${m.path}`} alt="Foto subida" />
+                      : <video src={`${API}/media/${m.path}`} muted />}
+                    {m.type === "video" && <span className="media-thumb-tag">🎬</span>}
+                    <button type="button" className="media-thumb-remove" onClick={() => removeMedia(m.id)} data-testid={`remove-media-${m.id}`}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <details className="advanced">
@@ -221,7 +325,7 @@ export default function Builder({ editMode = false }) {
           <button type="submit" disabled={saving} className="btn-primary btn-save" data-testid="save-invitation-btn">
             {saving ? "Guardando..." : editMode ? "💾 Guardar cambios" : "🎉 Crear invitación"}
           </button>
-          {editMode && (
+          {editMode && inv.paid && (
             <a href={`/i/${id}`} target="_blank" rel="noopener noreferrer" className="btn-outline btn-view-public" data-testid="view-public-btn">
               🔗 Ver invitación publicada
             </a>

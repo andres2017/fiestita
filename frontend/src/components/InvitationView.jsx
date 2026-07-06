@@ -131,6 +131,23 @@ export const InvitationView = ({ inv, preview = false }) => {
           </a>
         </section>
 
+        {/* FOTOS Y VIDEO */}
+        {(inv.media || []).length > 0 && (
+          <section className="inv-card">
+            <h2 className="inv-section-title">{copy.gallery}</h2>
+            {inv.media.filter((m) => m.type === "video").map((m) => (
+              <video key={m.id} controls playsInline className="inv-video" src={`${API}/media/${m.path}`} data-testid="inv-video" />
+            ))}
+            {inv.media.filter((m) => m.type === "photo").length > 0 && (
+              <div className="inv-photo-grid" data-testid="inv-photo-grid">
+                {inv.media.filter((m) => m.type === "photo").map((m) => (
+                  <img key={m.id} src={`${API}/media/${m.path}`} alt={`Foto de ${name}`} loading="lazy" />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {/* HOW TO ARRIVE */}
         {(inv.how_arrive || inv.maps_url || inv.waze_url) && (
           <section className="inv-card">

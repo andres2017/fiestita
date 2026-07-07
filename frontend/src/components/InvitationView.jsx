@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { THEMES, CATEGORY_FIELDS, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
 
@@ -229,6 +230,16 @@ export const InvitationView = ({ inv, preview = false }) => {
             </a>
           )}
         </section>
+
+        {!preview && (
+          <section className="inv-card inv-promo" data-testid="inv-promo">
+            <p className="inv-promo-title">✨ ¿Te gustó esta invitación?</p>
+            <p className="inv-promo-text">Crea la tuya en minutos, para cumpleaños, bodas, el partido o cualquier ocasión.</p>
+            <Link to="/crear" className="inv-btn inv-btn-primary" data-testid="inv-promo-btn">
+              🎉 Crear mi invitación
+            </Link>
+          </section>
+        )}
 
         <footer className="inv-footer">
           {inv.host_names ? `Con cariño, ${inv.host_names} 💛` : "Hecho con 💛 para una fiesta inolvidable"}

@@ -25,11 +25,26 @@ db = client[os.environ['DB_NAME']]
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
-VALID_THEMES = {
-    "videojuegos", "princesas", "superheroes", "dinosaurios", "espacio", "unicornios",
-    "magia", "circo", "piratas", "sirenas", "safari", "granja",
-    "mundial", "boda", "fiesta_adultos",
+# Debe reflejar exactamente las categorías de frontend/src/themes.js — se usa para
+# impedir que una invitación cambie de categoría (cumpleaños/boda/partido) al editarla.
+THEME_CATEGORY = {
+    "videojuegos": "cumple_infantil",
+    "princesas": "cumple_infantil",
+    "superheroes": "cumple_infantil",
+    "dinosaurios": "cumple_infantil",
+    "espacio": "cumple_infantil",
+    "unicornios": "cumple_infantil",
+    "magia": "cumple_infantil",
+    "circo": "cumple_infantil",
+    "piratas": "cumple_infantil",
+    "sirenas": "cumple_infantil",
+    "safari": "cumple_infantil",
+    "granja": "cumple_infantil",
+    "fiesta_adultos": "cumple_adulto",
+    "boda": "boda",
+    "mundial": "partido",
 }
+VALID_THEMES = set(THEME_CATEGORY.keys())
 
 # --- Pagos / administración -------------------------------------------------
 # ADMIN_KEY: clave secreta para acceder al panel "Mis ventas" (header X-Admin-Key).
@@ -72,6 +87,18 @@ def _is_valid_video_url(url: str) -> bool:
     """video_url must point at a file this server generated via /uploads/video, so it can't
     be used to smuggle an arbitrary external or javascript: URL into the <video> src."""
     return url == "" or bool(VIDEO_URL_RE.match(url))
+
+
+def _is_expired(event_date: str) -> bool:
+    """An invitation can no longer be edited starting the day after its event_date
+    (Colombia has no DST/multiple timezones so a plain UTC date compare is fine here)."""
+    if not event_date:
+        return False
+    try:
+        event_day = datetime.strptime(event_date, "%Y-%m-%d").date()
+    except ValueError:
+        return False
+    return event_day < datetime.now(timezone.utc).date()
 
 
 def _validate_invitation_links(data: "InvitationData") -> None:
@@ -179,6 +206,7 @@ async def get_invitation_for_edit(inv_id: str, token: str = Query(...)):
         raise HTTPException(status_code=404, detail="Invitación no encontrada")
     if doc["edit_token"] != token:
         raise HTTPException(status_code=403, detail="Link de edición inválido")
+    doc["expired"] = _is_expired(doc.get("event_date", ""))
     return doc
 
 
@@ -189,8 +217,12 @@ async def update_invitation(inv_id: str, data: InvitationData, token: str = Quer
         raise HTTPException(status_code=404, detail="Invitación no encontrada")
     if doc["edit_token"] != token:
         raise HTTPException(status_code=403, detail="Link de edición inválido")
+    if _is_expired(doc.get("event_date", "")):
+        raise HTTPException(status_code=403, detail="Esta invitación ya expiró porque el evento ya pasó. Crea una nueva invitación si necesitas otra.")
     if data.theme not in VALID_THEMES:
         raise HTTPException(status_code=400, detail="Temática inválida")
+    if THEME_CATEGORY.get(data.theme) != THEME_CATEGORY.get(doc.get("theme")):
+        raise HTTPException(status_code=400, detail="No puedes cambiar la categoría de una invitación ya creada (cumpleaños, boda, partido, etc). Crea una nueva invitación si quieres otra categoría.")
     _validate_invitation_links(data)
     await db.invitations.update_one({"id": inv_id}, {"$set": data.model_dump()})
     return {"ok": True}

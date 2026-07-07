@@ -42,6 +42,7 @@ export default function Builder({ editMode = false }) {
   const [priceCop, setPriceCop] = useState(null);
   const [rsvps, setRsvps] = useState(null);
   const [loadingRsvps, setLoadingRsvps] = useState(false);
+  const [expired, setExpired] = useState(false);
 
   const fieldConfig = CATEGORY_FIELDS[THEMES[inv.theme]?.category] || CATEGORY_FIELDS.cumple_infantil;
 
@@ -51,6 +52,7 @@ export default function Builder({ editMode = false }) {
         .then((r) => {
           setInv({ ...EMPTY, ...r.data });
           setSelectedCategory(THEMES[r.data.theme]?.category || "cumple_infantil");
+          setExpired(Boolean(r.data.expired));
         })
         .catch(() => setLoadError(true));
     }
@@ -151,6 +153,16 @@ export default function Builder({ editMode = false }) {
     );
   }
 
+  if (expired) {
+    return (
+      <div className="builder-error" data-testid="builder-expired">
+        <h2>⏳ Esta invitación ya expiró</h2>
+        <p>El evento ya pasó, así que esta invitación ya no se puede editar. Si necesitas otra, crea una nueva.</p>
+        <Link to="/crear" className="btn-primary">Crear nueva invitación</Link>
+      </div>
+    );
+  }
+
   return (
     <div className="builder">
       <nav className="landing-nav builder-nav">
@@ -203,12 +215,20 @@ export default function Builder({ editMode = false }) {
             {CATEGORIES.map((c) => (
               <button type="button" key={c.id}
                 className={`category-chip ${selectedCategory === c.id ? "active" : ""}`}
-                onClick={() => setSelectedCategory(c.id)}
+                onClick={() => !editMode && setSelectedCategory(c.id)}
+                disabled={editMode && selectedCategory !== c.id}
+                title={editMode && selectedCategory !== c.id ? "No puedes cambiar la categoría de una invitación ya creada" : undefined}
                 data-testid={`category-chip-${c.id}`}>
                 <span>{c.emoji}</span> {c.name}
               </button>
             ))}
           </div>
+          {editMode && (
+            <p className="field-help category-locked-note">
+              🔒 La categoría no se puede cambiar en una invitación ya creada. Si quieres otra
+              (por ejemplo pasar de cumpleaños a boda), crea una invitación nueva.
+            </p>
+          )}
 
           <label className="field-label">Temática</label>
           <div className="theme-picker" data-testid="theme-picker">

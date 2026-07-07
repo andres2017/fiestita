@@ -43,7 +43,7 @@ def created_invitation():
         "theme": "princesas",
         "child_name": "TEST_Sofia",
         "age": 6,
-        "event_date": "2026-06-15",
+        "event_date": "2026-12-15",  # must stay in the future: PUT is blocked once event_date passes
         "event_time": "16:00",
         "venue": "Salón Test",
         "address": "Calle Falsa 123",
@@ -123,6 +123,18 @@ class TestEditGet:
                          params={"token": "wrongtoken"})
         assert r.status_code == 403
 
+    def test_edit_reports_expired_flag(self, created_invitation):
+        r = requests.get(f"{API}/invitations/{created_invitation['id']}/edit",
+                         params={"token": created_invitation["edit_token"]})
+        assert r.json()["expired"] is False
+
+        past = requests.post(f"{API}/invitations", json={
+            "theme": "circo", "child_name": "TEST_ExpiredFlag", "age": 5,
+            "event_date": "2020-01-01", "event_time": "10:00",
+        }).json()
+        r2 = requests.get(f"{API}/invitations/{past['id']}/edit", params={"token": past["edit_token"]})
+        assert r2.json()["expired"] is True
+
 
 # --- PUT ---
 class TestUpdate:
@@ -151,6 +163,45 @@ class TestUpdate:
                              "event_date": "2026-01-01", "event_time": "10:00"
                          })
         assert r.status_code == 403
+
+    def test_update_rejects_expired_invitation(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "circo", "child_name": "TEST_Expired", "age": 5,
+            "event_date": "2020-01-01", "event_time": "10:00",
+        })
+        data = r.json()
+        put = requests.put(f"{API}/invitations/{data['id']}",
+                           params={"token": data["edit_token"]}, json={
+                               "theme": "circo", "child_name": "TEST_Expired_2", "age": 6,
+                               "event_date": "2030-01-01", "event_time": "10:00",
+                           })
+        assert put.status_code == 403
+
+    def test_update_rejects_category_change(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "circo", "child_name": "TEST_Cat", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+        })
+        data = r.json()
+        put = requests.put(f"{API}/invitations/{data['id']}",
+                           params={"token": data["edit_token"]}, json={
+                               "theme": "boda", "child_name": "TEST_Cat_2",
+                               "event_date": "2026-12-01", "event_time": "10:00",
+                           })
+        assert put.status_code == 400
+
+    def test_update_allows_same_category_theme_change(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "circo", "child_name": "TEST_SameCat", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+        })
+        data = r.json()
+        put = requests.put(f"{API}/invitations/{data['id']}",
+                           params={"token": data["edit_token"]}, json={
+                               "theme": "piratas", "child_name": "TEST_SameCat_2", "age": 6,
+                               "event_date": "2026-12-01", "event_time": "10:00",
+                           })
+        assert put.status_code == 200
 
 
 # --- Video Upload ---

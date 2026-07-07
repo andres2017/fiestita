@@ -177,6 +177,9 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 }
 .category-chip:hover { transform: translateY(-2px); }
 .category-chip.active { background: var(--l-secondary); color: #fff; box-shadow: 3px 3px 0 rgba(31,41,55,0.8); }
+.category-chip:disabled { opacity: 0.35; cursor: not-allowed; }
+.category-chip:disabled:hover { transform: none; }
+.category-locked-note { margin: -0.75rem 0 1.25rem; }
 
 .theme-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 1.25rem; }
 .theme-chip {
@@ -343,6 +346,10 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-success p:last-child { font-weight: 700; line-height: 1.6; }
 
 .inv-footer { text-align: center; font-weight: 700; opacity: 0.7; font-size: 0.9rem; padding-top: 0.5rem; }
+
+.inv-promo { text-align: center; }
+.inv-promo-title { font-family: var(--inv-font); font-size: calc(1.05rem * var(--inv-scale)); color: var(--inv-primary); margin: 0 0 0.4rem; }
+.inv-promo-text { font-size: 0.85rem; opacity: 0.85; margin: 0 0 1rem; line-height: 1.5; }
 
 /* Preview inside builder: shrink invitation */
 .preview-frame .inv-root { min-height: auto; }

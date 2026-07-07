@@ -30,6 +30,7 @@ Usuario aportó ejemplo: invitación HTML estilo videojuego retro (cuenta regres
 - [x] (Jul 2026) Paywall Wompi PRODUCCIÓN: $55.000 COP para publicar. Link público devuelve 402 hasta pagar. Checkout web de Wompi con firma de integridad, verificación server-side de transacción y webhook firmado (/api/wompi/webhook). Sin registro.
 - [x] (Jul 2026) Placeholders de ejemplo "Gabriel" reemplazados por genéricos
 - [x] Testeado E2E iteration_2: media upload, paywall, webhook simulado — 100%
+- [x] (Jul 2026) Panel privado "Mis ventas" en /admin/ventas (clave X-Admin-Key en .env): ingresos totales, por mes, tabla de pagos APPROVED con invitación, método y referencia. Webhook y verify-payment registran cada transacción en colección `payments`. Archivos del usuario fusionados sin romper paywall/fotos.
 
 ## Config clave
 - Llaves Wompi (producción) y precio en /app/backend/.env (PUBLISH_PRICE_CENTS=5500000)

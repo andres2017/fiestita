@@ -28,6 +28,7 @@ api_router = APIRouter(prefix="/api")
 VALID_THEMES = {
     "videojuegos", "princesas", "superheroes", "dinosaurios", "espacio", "unicornios",
     "magia", "circo", "piratas", "sirenas", "safari", "granja",
+    "mundial", "boda", "fiesta_adultos",
 }
 
 # --- Pagos / administración -------------------------------------------------
@@ -89,7 +90,7 @@ class InvitationData(BaseModel):
     theme: str = "videojuegos"
     child_name: str
     child_full_name: str = ""
-    age: int
+    age: int = 0
     event_date: str  # YYYY-MM-DD
     event_time: str  # HH:MM
     venue: str = ""
@@ -99,6 +100,7 @@ class InvitationData(BaseModel):
     waze_url: str = ""
     whatsapp: str = ""
     message: str = ""
+    event_subtitle: str = ""
     script_url: str = ""
     host_names: str = ""
     video_url: str = ""

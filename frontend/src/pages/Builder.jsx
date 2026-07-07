@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { THEME_LIST } from "../themes";
+import { CATEGORIES, THEMES, THEME_LIST } from "../themes";
 import { InvitationView } from "../components/InvitationView";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
@@ -23,15 +23,31 @@ const EMPTY = {
   waze_url: "",
   whatsapp: "",
   message: "",
+  event_subtitle: "",
   script_url: "",
   host_names: "",
   video_url: "",
 };
 
+const CATEGORY_FIELDS = {
+  cumple_infantil: { nameLabel: "Nombre del peque *", namePlaceholder: "Gabriel", showAge: true, ageLabel: "Edad que cumple *", showSubtitle: false },
+  cumple_adulto: { nameLabel: "Nombre del festejado *", namePlaceholder: "Andrea", showAge: true, ageLabel: "Edad que cumple *", showSubtitle: false },
+  boda: {
+    nameLabel: "Nombres de los novios *", namePlaceholder: "Juan & María", showAge: false, showSubtitle: true,
+    subtitleLabel: "Detalle especial (opcional)", subtitlePlaceholder: "Ceremonia religiosa seguida de recepción",
+  },
+  partido: {
+    nameLabel: "¿Quién invita? *", namePlaceholder: "Andrés", showAge: false, showSubtitle: true,
+    subtitleLabel: "¿Qué partido? (opcional)", subtitlePlaceholder: "Colombia 🇨🇴 vs Argentina 🇦🇷",
+  },
+};
+
 export default function Builder({ editMode = false }) {
   const { id, token } = useParams();
   const [searchParams] = useSearchParams();
-  const [inv, setInv] = useState({ ...EMPTY, theme: searchParams.get("tema") || "videojuegos" });
+  const initialTheme = searchParams.get("tema") || "videojuegos";
+  const [inv, setInv] = useState({ ...EMPTY, theme: initialTheme });
+  const [selectedCategory, setSelectedCategory] = useState(THEMES[initialTheme]?.category || "cumple_infantil");
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [tab, setTab] = useState("form");
@@ -40,10 +56,15 @@ export default function Builder({ editMode = false }) {
   const [rsvps, setRsvps] = useState(null);
   const [loadingRsvps, setLoadingRsvps] = useState(false);
 
+  const fieldConfig = CATEGORY_FIELDS[THEMES[inv.theme]?.category] || CATEGORY_FIELDS.cumple_infantil;
+
   useEffect(() => {
     if (editMode && id && token) {
       axios.get(`${API}/invitations/${id}/edit`, { params: { token } })
-        .then((r) => setInv({ ...EMPTY, ...r.data }))
+        .then((r) => {
+          setInv({ ...EMPTY, ...r.data });
+          setSelectedCategory(THEMES[r.data.theme]?.category || "cumple_infantil");
+        })
         .catch(() => setLoadError(true));
     }
   }, [editMode, id, token]);
@@ -190,9 +211,21 @@ export default function Builder({ editMode = false }) {
         <form onSubmit={save} className={`builder-form ${tab === "form" ? "" : "hide-mobile"}`}>
           <h1>{editMode ? "✏️ Edita tu invitación" : "🎨 Crea tu invitación"}</h1>
 
+          <label className="field-label">Tipo de evento</label>
+          <div className="category-picker" data-testid="category-picker">
+            {CATEGORIES.map((c) => (
+              <button type="button" key={c.id}
+                className={`category-chip ${selectedCategory === c.id ? "active" : ""}`}
+                onClick={() => setSelectedCategory(c.id)}
+                data-testid={`category-chip-${c.id}`}>
+                <span>{c.emoji}</span> {c.name}
+              </button>
+            ))}
+          </div>
+
           <label className="field-label">Temática</label>
           <div className="theme-picker" data-testid="theme-picker">
-            {THEME_LIST.map((t) => (
+            {THEME_LIST.filter((t) => t.category === selectedCategory).map((t) => (
               <button type="button" key={t.id}
                 className={`theme-chip ${inv.theme === t.id ? "active" : ""}`}
                 onClick={() => setInv({ ...inv, theme: t.id })}
@@ -203,20 +236,31 @@ export default function Builder({ editMode = false }) {
           </div>
 
           <div className="field-row">
-            <div className="field">
-              <label className="field-label" htmlFor="input-child-name">Nombre del peque *</label>
-              <input id="input-child-name" required value={inv.child_name} onChange={set("child_name")} placeholder="Gabriel" data-testid="input-child-name" />
+            <div className={fieldConfig.showAge ? "field" : "field field-full"}>
+              <label className="field-label" htmlFor="input-child-name">{fieldConfig.nameLabel}</label>
+              <input id="input-child-name" required value={inv.child_name} onChange={set("child_name")} placeholder={fieldConfig.namePlaceholder} data-testid="input-child-name" />
             </div>
-            <div className="field field-sm">
-              <label className="field-label" htmlFor="input-age">Edad que cumple *</label>
-              <input id="input-age" required type="number" min="1" max="15" value={inv.age} onChange={set("age")} placeholder="2" data-testid="input-age" />
-            </div>
+            {fieldConfig.showAge && (
+              <div className="field field-sm">
+                <label className="field-label" htmlFor="input-age">{fieldConfig.ageLabel}</label>
+                <input id="input-age" required type="number" min="1" max="110" value={inv.age} onChange={set("age")} placeholder="2" data-testid="input-age" />
+              </div>
+            )}
           </div>
 
-          <div className="field">
-            <label className="field-label" htmlFor="input-full-name">Nombre completo (opcional)</label>
-            <input id="input-full-name" value={inv.child_full_name} onChange={set("child_full_name")} placeholder="Gabriel Alejandro Vargas Cetina" data-testid="input-full-name" />
-          </div>
+          {fieldConfig.showAge && (
+            <div className="field">
+              <label className="field-label" htmlFor="input-full-name">Nombre completo (opcional)</label>
+              <input id="input-full-name" value={inv.child_full_name} onChange={set("child_full_name")} placeholder="Gabriel Alejandro Vargas Cetina" data-testid="input-full-name" />
+            </div>
+          )}
+
+          {fieldConfig.showSubtitle && (
+            <div className="field">
+              <label className="field-label" htmlFor="input-subtitle">{fieldConfig.subtitleLabel}</label>
+              <input id="input-subtitle" value={inv.event_subtitle} onChange={set("event_subtitle")} placeholder={fieldConfig.subtitlePlaceholder} data-testid="input-subtitle" />
+            </div>
+          )}
 
           <div className="field-row">
             <div className="field">

@@ -71,6 +71,7 @@ export const InvitationView = ({ inv, preview = false }) => {
   const waUrl = whatsappUrl(inv);
   const name = inv.child_name || "Tu peque";
   const age = inv.age || "?";
+  const dispInv = { ...inv, child_name: name, age };
 
   return (
     <div className={`inv-root ${theme.dark ? "inv-dark" : "inv-light"}`} style={styleVars} data-testid="invitation-view">
@@ -84,11 +85,11 @@ export const InvitationView = ({ inv, preview = false }) => {
         {/* HERO */}
         <header className="inv-hero">
           <div className="inv-badge" data-testid="inv-badge">
-            {copy.badge(name.toUpperCase())} · {inv.event_date ? inv.event_date.split("-").reverse().join(" · ") : ""}
+            {copy.badge(dispInv)} · {inv.event_date ? inv.event_date.split("-").reverse().join(" · ") : ""}
           </div>
-          <h1 className="inv-title" data-testid="inv-title">{copy.title(name, age)}</h1>
+          <h1 className="inv-title" data-testid="inv-title">{copy.title(dispInv)}</h1>
           {inv.child_full_name && <p className="inv-fullname">{inv.child_full_name.toUpperCase()}</p>}
-          <p className="inv-subtitle">{copy.subtitle(age)}</p>
+          <p className="inv-subtitle">{copy.subtitle(dispInv)}</p>
           <div className="inv-arrows">▼ ▼ ▼</div>
         </header>
 
@@ -209,7 +210,7 @@ export const InvitationView = ({ inv, preview = false }) => {
                     onChange={(e) => setForm({ ...form, ninos: e.target.value })} data-testid="rsvp-kids-input" />
                 </div>
               </div>
-              <textarea className="inv-input" rows="3" placeholder={copy.msgLabel(name)} value={form.mensaje}
+              <textarea className="inv-input" rows="3" placeholder={copy.msgLabel(dispInv)} value={form.mensaje}
                 onChange={(e) => setForm({ ...form, mensaje: e.target.value })} data-testid="rsvp-message-input" />
               <button type="submit" disabled={sending} className="inv-btn inv-btn-primary inv-btn-submit" data-testid="rsvp-submit-btn">
                 {sending ? "Enviando..." : copy.confirm}

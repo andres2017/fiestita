@@ -74,6 +74,24 @@ class TestCreate:
         r = requests.post(f"{API}/invitations", json={"theme": "espacio"})
         assert r.status_code == 422
 
+    def test_create_without_age_for_non_birthday_categories(self):
+        # boda / partido themes don't collect an age; the field must be optional.
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_Novios",
+            "event_date": "2026-05-01", "event_time": "18:00",
+            "event_subtitle": "Ceremonia civil",
+        })
+        assert r.status_code == 200, r.text
+        assert "id" in r.json()
+
+    def test_create_new_themes_accepted(self):
+        for theme in ["mundial", "boda", "fiesta_adultos"]:
+            r = requests.post(f"{API}/invitations", json={
+                "theme": theme, "child_name": "TEST_Tema", "age": 5,
+                "event_date": "2026-01-01", "event_time": "10:00",
+            })
+            assert r.status_code == 200, f"{theme}: {r.text}"
+
 
 # --- Public GET ---
 class TestGetPublic:

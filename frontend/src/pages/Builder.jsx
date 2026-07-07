@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { CATEGORIES, THEMES, THEME_LIST } from "../themes";
+import { CATEGORIES, CATEGORY_FIELDS, THEMES, THEME_LIST } from "../themes";
 import { InvitationView } from "../components/InvitationView";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
@@ -27,19 +27,6 @@ const EMPTY = {
   script_url: "",
   host_names: "",
   video_url: "",
-};
-
-const CATEGORY_FIELDS = {
-  cumple_infantil: { nameLabel: "Nombre del peque *", namePlaceholder: "Gabriel", showAge: true, ageLabel: "Edad que cumple *", showSubtitle: false },
-  cumple_adulto: { nameLabel: "Nombre del festejado *", namePlaceholder: "Andrea", showAge: true, ageLabel: "Edad que cumple *", showSubtitle: false },
-  boda: {
-    nameLabel: "Nombres de los novios *", namePlaceholder: "Juan & María", showAge: false, showSubtitle: true,
-    subtitleLabel: "Detalle especial (opcional)", subtitlePlaceholder: "Ceremonia religiosa seguida de recepción",
-  },
-  partido: {
-    nameLabel: "¿Quién invita? *", namePlaceholder: "Andrés", showAge: false, showSubtitle: true,
-    subtitleLabel: "¿Qué partido? (opcional)", subtitlePlaceholder: "Colombia 🇨🇴 vs Argentina 🇦🇷",
-  },
 };
 
 export default function Builder({ editMode = false }) {

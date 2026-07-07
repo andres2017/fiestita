@@ -5,6 +5,21 @@ export const CATEGORIES = [
   { id: "partido", name: "Ver el partido", emoji: "⚽" },
 ];
 
+// Per-category field labels/placeholders and fallback display name, shared by
+// Builder.jsx (creation form) and AdminVentas.jsx (manual creation form).
+export const CATEGORY_FIELDS = {
+  cumple_infantil: { nameLabel: "Nombre del peque *", namePlaceholder: "Gabriel", fallbackName: "Tu peque", showAge: true, ageLabel: "Edad que cumple *", showSubtitle: false },
+  cumple_adulto: { nameLabel: "Nombre del festejado *", namePlaceholder: "Andrea", fallbackName: "El festejado", showAge: true, ageLabel: "Edad que cumple *", showSubtitle: false },
+  boda: {
+    nameLabel: "Nombres de los novios *", namePlaceholder: "Juan & María", fallbackName: "Los novios", showAge: false, showSubtitle: true,
+    subtitleLabel: "Detalle especial (opcional)", subtitlePlaceholder: "Ceremonia religiosa seguida de recepción",
+  },
+  partido: {
+    nameLabel: "¿Quién invita? *", namePlaceholder: "Andrés", fallbackName: "El anfitrión", showAge: false, showSubtitle: true,
+    subtitleLabel: "¿Qué partido? (opcional)", subtitlePlaceholder: "Colombia 🇨🇴 vs Argentina 🇦🇷",
+  },
+};
+
 export const THEMES = {
   videojuegos: {
     id: "videojuegos",

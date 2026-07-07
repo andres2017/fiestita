@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { THEMES, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
+import { THEMES, CATEGORY_FIELDS, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
@@ -69,7 +69,7 @@ export const InvitationView = ({ inv, preview = false }) => {
   };
 
   const waUrl = whatsappUrl(inv);
-  const name = inv.child_name || "Tu peque";
+  const name = inv.child_name || CATEGORY_FIELDS[theme.category]?.fallbackName || "Tu invitado";
   const age = inv.age || "?";
   const dispInv = { ...inv, child_name: name, age };
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { THEMES, THEME_LIST } from "../themes";
+import { THEMES, THEME_LIST, CATEGORIES, CATEGORY_FIELDS } from "../themes";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const KEY_STORAGE = "fiestita_admin_key";
@@ -43,6 +43,7 @@ const EMPTY_MANUAL = {
   venue: "",
   whatsapp: "",
   host_names: "",
+  event_subtitle: "",
   amount_cop: "",
   customer_email: "",
   payment_note: "",
@@ -74,6 +75,9 @@ const st = {
   select: { background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "12px 14px", color: "#fff", fontSize: 15, width: "100%", boxSizing: "border-box" },
   linkRow: { display: "flex", gap: 8, marginTop: 6 },
   linkInput: { flex: 1, background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 13, minWidth: 0 },
+  categoryChips: { display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0 4px" },
+  categoryChip: { background: "transparent", color: "#94A3B8", border: "1px solid #334155", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer" },
+  categoryChipActive: { background: "#8B5CF6", color: "#fff", borderColor: "#8B5CF6" },
 };
 
 export default function AdminVentas() {
@@ -121,10 +125,19 @@ export default function AdminVentas() {
 
   const [manualOpen, setManualOpen] = useState(false);
   const [manualForm, setManualForm] = useState(EMPTY_MANUAL);
+  const [manualCategory, setManualCategory] = useState("cumple_infantil");
   const [manualSaving, setManualSaving] = useState(false);
   const [manualError, setManualError] = useState("");
   const [manualResult, setManualResult] = useState(null);
   const setManual = (k) => (e) => setManualForm({ ...manualForm, [k]: e.target.value });
+  const manualFieldConfig = CATEGORY_FIELDS[manualCategory];
+  const manualThemesForCategory = THEME_LIST.filter((t) => t.category === manualCategory);
+
+  const selectManualCategory = (catId) => {
+    setManualCategory(catId);
+    const firstTheme = THEME_LIST.find((t) => t.category === catId);
+    setManualForm((prev) => ({ ...prev, theme: firstTheme?.id || prev.theme }));
+  };
 
   const crearManual = async (e) => {
     e.preventDefault();
@@ -140,6 +153,7 @@ export default function AdminVentas() {
       const r = await axios.post(`${API}/admin/invitations`, payload, { headers: { "X-Admin-Key": key } });
       setManualResult(r.data);
       setManualForm(EMPTY_MANUAL);
+      setManualCategory("cumple_infantil");
       cargar(key);
     } catch (err) {
       setManualError(err?.response?.data?.detail || "No se pudo crear la invitación.");
@@ -225,24 +239,44 @@ export default function AdminVentas() {
                 activa de inmediato y se registra como venta con método "Manual".
               </p>
 
+              <label style={st.label}>Tipo de evento</label>
+              <div style={st.categoryChips} data-testid="manual-category-chips">
+                {CATEGORIES.map((c) => (
+                  <button type="button" key={c.id}
+                    style={{ ...st.categoryChip, ...(manualCategory === c.id ? st.categoryChipActive : {}) }}
+                    onClick={() => selectManualCategory(c.id)}
+                    data-testid={`manual-category-${c.id}`}>
+                    {c.emoji} {c.name}
+                  </button>
+                ))}
+              </div>
+
               <form onSubmit={crearManual}>
                 <div style={st.manualGrid}>
                   <div>
                     <label style={st.label} htmlFor="manual-theme">Temática</label>
                     <select id="manual-theme" style={st.select} value={manualForm.theme} onChange={setManual("theme")} data-testid="manual-theme">
-                      {THEME_LIST.map((t) => (
+                      {manualThemesForCategory.map((t) => (
                         <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label style={st.label} htmlFor="manual-name">Nombre del peque *</label>
-                    <input id="manual-name" style={st.input} required value={manualForm.child_name} onChange={setManual("child_name")} data-testid="manual-child-name" />
+                    <label style={st.label} htmlFor="manual-name">{manualFieldConfig.nameLabel}</label>
+                    <input id="manual-name" style={st.input} required value={manualForm.child_name} onChange={setManual("child_name")} placeholder={manualFieldConfig.namePlaceholder} data-testid="manual-child-name" />
                   </div>
-                  <div>
-                    <label style={st.label} htmlFor="manual-age">Edad que cumple *</label>
-                    <input id="manual-age" style={st.input} required type="number" min="1" max="15" value={manualForm.age} onChange={setManual("age")} data-testid="manual-age" />
-                  </div>
+                  {manualFieldConfig.showAge && (
+                    <div>
+                      <label style={st.label} htmlFor="manual-age">{manualFieldConfig.ageLabel}</label>
+                      <input id="manual-age" style={st.input} required type="number" min="1" max="110" value={manualForm.age} onChange={setManual("age")} data-testid="manual-age" />
+                    </div>
+                  )}
+                  {manualFieldConfig.showSubtitle && (
+                    <div>
+                      <label style={st.label} htmlFor="manual-subtitle">{manualFieldConfig.subtitleLabel}</label>
+                      <input id="manual-subtitle" style={st.input} value={manualForm.event_subtitle} onChange={setManual("event_subtitle")} placeholder={manualFieldConfig.subtitlePlaceholder} data-testid="manual-subtitle" />
+                    </div>
+                  )}
                   <div>
                     <label style={st.label} htmlFor="manual-date">Fecha de la fiesta *</label>
                     <input id="manual-date" style={st.input} required type="date" value={manualForm.event_date} onChange={setManual("event_date")} data-testid="manual-date" />

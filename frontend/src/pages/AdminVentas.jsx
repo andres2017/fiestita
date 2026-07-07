@@ -106,9 +106,9 @@ export default function AdminVentas() {
   }, []);
 
   useEffect(() => {
-    document.title = "Mis ventas - Fiestita";
+    document.title = "Mis ventas - Invitaciones Digitales Fiestita";
     if (key) cargar(key);
-    return () => { document.title = "Fiestita"; };
+    return () => { document.title = "Invitaciones Digitales Fiestita"; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -154,7 +154,7 @@ export default function AdminVentas() {
         <div style={st.loginBox} data-testid="admin-login">
           <div style={{ fontSize: 40 }}>🔒</div>
           <h1 style={{ ...st.h1, marginBottom: 6 }}>Mis ventas</h1>
-          <p style={st.muted}>Panel privado de Fiestita. Ingresa tu clave de administrador.</p>
+          <p style={st.muted}>Panel privado de Invitaciones Digitales Fiestita. Ingresa tu clave de administrador.</p>
           <input
             style={{ ...st.input, marginTop: 14 }}
             type="password"
@@ -174,7 +174,7 @@ export default function AdminVentas() {
           </button>
           {error && <div style={st.error}>{error}</div>}
           <div style={{ marginTop: 18 }}>
-            <Link to="/" style={{ color: "#8B5CF6", fontSize: 13 }}>← Volver a Fiestita</Link>
+            <Link to="/" style={{ color: "#8B5CF6", fontSize: 13 }}>← Volver a Invitaciones Digitales Fiestita</Link>
           </div>
         </div>
       </div>

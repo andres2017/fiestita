@@ -6,7 +6,7 @@ import axios from "axios";
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CONTACT_WHATSAPP = "573108175926";
 const contactWaUrl = `https://wa.me/${CONTACT_WHATSAPP}?text=${encodeURIComponent(
-  "¡Hola! Vi Fiestita y quiero que me ayuden a crear una invitación 🎉"
+  "¡Hola! Vi Invitaciones Digitales Fiestita y quiero que me ayuden a crear una invitación 🎉"
 )}`;
 const NEW_THEME_IDS = ["mundial", "boda", "fiesta_adultos"];
 
@@ -24,7 +24,7 @@ export default function Landing() {
   return (
     <div className="landing">
       <nav className="landing-nav">
-        <span className="landing-logo">🎈 Fiestita</span>
+        <span className="landing-logo">🎈 Invitaciones Digitales Fiestita</span>
         <Link to="/crear" className="btn-primary-sm" data-testid="nav-create-btn">Crear invitación</Link>
       </nav>
 
@@ -108,7 +108,7 @@ export default function Landing() {
       </section>
 
       <footer className="landing-footer">
-        <p>Hecho con 💛 para celebraciones inolvidables · Fiestita 🎈</p>
+        <p>Hecho con 💛 para celebraciones inolvidables · Invitaciones Digitales Fiestita 🎈</p>
         <Link to="/admin/ventas" className="landing-admin-link" data-testid="admin-link">Panel de administrador</Link>
       </footer>
 

@@ -167,7 +167,7 @@ export default function Builder({ editMode = false }) {
   return (
     <div className="builder">
       <nav className="landing-nav builder-nav">
-        <Link to="/" className="landing-logo">🎈 Fiestita</Link>
+        <Link to="/" className="landing-logo">🎈 Invitaciones Digitales Fiestita</Link>
         <div className="builder-tabs">
           <button className={tab === "form" ? "active" : ""} onClick={() => setTab("form")} data-testid="tab-form-btn">✏️ Editar</button>
           <button className={tab === "preview" ? "active" : ""} onClick={() => setTab("preview")} data-testid="tab-preview-btn">👀 Vista previa</button>

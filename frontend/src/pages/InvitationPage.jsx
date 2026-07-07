@@ -18,10 +18,10 @@ export default function InvitationPage() {
 
   useEffect(() => {
     if (inv?.child_name) {
-      document.title = `🎈 Cumple de ${inv.child_name} - Fiestita`;
+      document.title = `🎈 ${inv.child_name} - Invitaciones Digitales Fiestita`;
     }
     return () => {
-      document.title = "Fiestita";
+      document.title = "Invitaciones Digitales Fiestita";
     };
   }, [inv]);
 

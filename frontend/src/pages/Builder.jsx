@@ -65,7 +65,12 @@ export default function Builder({ editMode = false }) {
 
   useEffect(() => { loadRsvps(); }, [loadRsvps]);
 
-  const isAttending = (asiste) => asiste.includes("✅") || /\bs[ií]\b/i.test(asiste);
+  const isAttending = (asiste) => {
+    if (asiste.includes("✅")) return true;
+    if (asiste.includes("❌")) return false;
+    const normalized = asiste.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    return /\bsi\b/.test(normalized);
+  };
   const totalPersonas = rsvps
     ? rsvps.rsvps.filter((r) => isAttending(r.asiste)).reduce((sum, r) => sum + Number(r.adultos || 0) + Number(r.ninos || 0), 0)
     : 0;

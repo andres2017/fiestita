@@ -111,6 +111,12 @@ class Invitation(InvitationData):
     paid: bool = False
 
 
+class AdminInvitationCreate(InvitationData):
+    amount_cop: Optional[int] = None
+    customer_email: str = ""
+    payment_note: str = ""
+
+
 class RsvpCreate(BaseModel):
     model_config = ConfigDict(extra="ignore")
     nombre: str
@@ -330,6 +336,44 @@ def _require_admin(request: Request) -> None:
     key = request.headers.get("X-Admin-Key", "")
     if not ADMIN_KEY or not key or not secrets.compare_digest(key, ADMIN_KEY):
         raise HTTPException(status_code=403, detail="No autorizado")
+
+
+@api_router.post("/admin/invitations")
+async def admin_create_invitation(data: AdminInvitationCreate, request: Request):
+    """Crea una invitación ya marcada como pagada, sin pasar por Wompi, para cuando el
+    administrador cobra por fuera (WhatsApp, efectivo, transferencia) y la crea a mano.
+    También registra un pago APPROVED de tipo MANUAL para que aparezca en 'Mis ventas'."""
+    _require_admin(request)
+    if data.theme not in VALID_THEMES:
+        raise HTTPException(status_code=400, detail="Temática inválida")
+    _validate_invitation_links(data)
+
+    inv_fields = data.model_dump(exclude={"amount_cop", "customer_email", "payment_note"})
+    inv = Invitation(**inv_fields, paid=True)
+    now = datetime.now(timezone.utc).isoformat()
+    inv_doc = inv.model_dump()
+    inv_doc["paid_at"] = now
+    await db.invitations.insert_one(inv_doc)
+
+    amount_cop = data.amount_cop if data.amount_cop is not None else INVITATION_PRICE_COP
+    payment = {
+        "id": str(uuid.uuid4()),
+        "wompi_transaction_id": f"MANUAL-{inv.id}",
+        "reference": f"{PAYMENT_REFERENCE_PREFIX}{inv.id}",
+        "status": "APPROVED",
+        "amount_in_cents": amount_cop * 100,
+        "currency": "COP",
+        "payment_method_type": "MANUAL",
+        "customer_email": data.customer_email,
+        "finalized_at": now,
+        "created_at": now,
+        "updated_at": now,
+    }
+    if data.payment_note:
+        payment["payment_note"] = data.payment_note
+    await db.payments.insert_one(payment)
+
+    return {"id": inv.id, "edit_token": inv.edit_token}
 
 
 @api_router.get("/admin/sales")

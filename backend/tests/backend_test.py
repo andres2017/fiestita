@@ -7,6 +7,7 @@ import requests
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8000').rstrip('/')
 API = f"{BASE_URL}/api"
 WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', '')
+ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 
 
 def _approve_payment(checkout, tx_id):
@@ -234,3 +235,47 @@ class TestPayments:
         r = requests.get(f"{API}/invitations/{data['id']}")
         assert r.status_code == 200
         assert r.json()["child_name"] == "TEST_Pago"
+
+
+# --- Admin: manual invitation creation ---
+class TestAdminManualInvitation:
+    def _payload(self, **overrides):
+        payload = {
+            "theme": "piratas", "child_name": "TEST_Manual", "age": 7,
+            "event_date": "2026-11-11", "event_time": "13:00",
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_requires_admin_key(self):
+        r = requests.post(f"{API}/admin/invitations", json=self._payload())
+        assert r.status_code == 403
+
+    def test_rejects_wrong_admin_key(self):
+        r = requests.post(f"{API}/admin/invitations", json=self._payload(),
+                          headers={"X-Admin-Key": "wrong"})
+        assert r.status_code == 403
+
+    def test_creates_paid_invitation_and_manual_sale(self):
+        r = requests.post(f"{API}/admin/invitations", json=self._payload(amount_cop=30000),
+                          headers={"X-Admin-Key": ADMIN_KEY})
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert "id" in data and "edit_token" in data
+
+        # Paid immediately: public view works without any Wompi webhook.
+        pub = requests.get(f"{API}/invitations/{data['id']}")
+        assert pub.status_code == 200
+        assert pub.json()["child_name"] == "TEST_Manual"
+
+        # Shows up in the sales dashboard as a MANUAL payment with the custom amount.
+        sales = requests.get(f"{API}/admin/sales", headers={"X-Admin-Key": ADMIN_KEY})
+        assert sales.status_code == 200
+        sale = next(s for s in sales.json()["sales"] if s["reference"] == f"FIESTITA-{data['id']}")
+        assert sale["payment_method_type"] == "MANUAL"
+        assert sale["amount_in_cents"] == 30000 * 100
+
+    def test_invalid_theme_rejected(self):
+        r = requests.post(f"{API}/admin/invitations", json=self._payload(theme="not-a-theme"),
+                          headers={"X-Admin-Key": ADMIN_KEY})
+        assert r.status_code == 400

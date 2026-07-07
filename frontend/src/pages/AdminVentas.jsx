@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { THEMES } from "../themes";
+import { THEMES, THEME_LIST } from "../themes";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const KEY_STORAGE = "fiestita_admin_key";
@@ -31,6 +31,21 @@ const METODO = {
   BANCOLOMBIA_TRANSFER: "🏦 Bancolombia",
   BANCOLOMBIA_COLLECT: "🏦 Corresponsal",
   DAVIPLATA: "📱 Daviplata",
+  MANUAL: "✍️ Manual",
+};
+
+const EMPTY_MANUAL = {
+  theme: "videojuegos",
+  child_name: "",
+  age: "",
+  event_date: "",
+  event_time: "",
+  venue: "",
+  whatsapp: "",
+  host_names: "",
+  amount_cop: "",
+  customer_email: "",
+  payment_note: "",
 };
 
 const st = {
@@ -53,6 +68,12 @@ const st = {
   error: { color: "#F87171", fontSize: 14, marginTop: 10 },
   muted: { color: "#94A3B8", fontSize: 13 },
   monthRow: { display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px dashed #334155", fontSize: 14 },
+  manualHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", userSelect: "none" },
+  manualGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginTop: 16 },
+  label: { display: "block", fontSize: 12, fontWeight: 700, color: "#94A3B8", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
+  select: { background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "12px 14px", color: "#fff", fontSize: 15, width: "100%", boxSizing: "border-box" },
+  linkRow: { display: "flex", gap: 8, marginTop: 6 },
+  linkInput: { flex: 1, background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "10px 12px", color: "#fff", fontSize: 13, minWidth: 0 },
 };
 
 export default function AdminVentas() {
@@ -96,6 +117,35 @@ export default function AdminVentas() {
     setKey("");
     setData(null);
     setInput("");
+  };
+
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualForm, setManualForm] = useState(EMPTY_MANUAL);
+  const [manualSaving, setManualSaving] = useState(false);
+  const [manualError, setManualError] = useState("");
+  const [manualResult, setManualResult] = useState(null);
+  const setManual = (k) => (e) => setManualForm({ ...manualForm, [k]: e.target.value });
+
+  const crearManual = async (e) => {
+    e.preventDefault();
+    setManualSaving(true);
+    setManualError("");
+    setManualResult(null);
+    try {
+      const payload = {
+        ...manualForm,
+        age: Number(manualForm.age) || 0,
+        amount_cop: manualForm.amount_cop ? Number(manualForm.amount_cop) : null,
+      };
+      const r = await axios.post(`${API}/admin/invitations`, payload, { headers: { "X-Admin-Key": key } });
+      setManualResult(r.data);
+      setManualForm(EMPTY_MANUAL);
+      cargar(key);
+    } catch (err) {
+      setManualError(err?.response?.data?.detail || "No se pudo crear la invitación.");
+    } finally {
+      setManualSaving(false);
+    }
   };
 
   if (!key || !data) {
@@ -160,6 +210,94 @@ export default function AdminVentas() {
             <div style={st.cardLabel}>Este mes</div>
             <div style={st.cardValue}>{fmtCOP(ingresosMes)}</div>
           </div>
+        </div>
+
+        <div style={{ ...st.card, marginBottom: 24 }}>
+          <div style={st.manualHeader} onClick={() => setManualOpen(!manualOpen)} data-testid="manual-toggle">
+            <div style={st.cardLabel}>✍️ Crear invitación manual (pago por fuera de Wompi)</div>
+            <span style={{ color: "#94A3B8", fontSize: 18 }}>{manualOpen ? "−" : "+"}</span>
+          </div>
+
+          {manualOpen && (
+            <>
+              <p style={{ ...st.muted, marginTop: 10 }}>
+                Úsalo cuando alguien te pague por WhatsApp, efectivo o transferencia. La invitación queda
+                activa de inmediato y se registra como venta con método "Manual".
+              </p>
+
+              <form onSubmit={crearManual}>
+                <div style={st.manualGrid}>
+                  <div>
+                    <label style={st.label} htmlFor="manual-theme">Temática</label>
+                    <select id="manual-theme" style={st.select} value={manualForm.theme} onChange={setManual("theme")} data-testid="manual-theme">
+                      {THEME_LIST.map((t) => (
+                        <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-name">Nombre del peque *</label>
+                    <input id="manual-name" style={st.input} required value={manualForm.child_name} onChange={setManual("child_name")} data-testid="manual-child-name" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-age">Edad que cumple *</label>
+                    <input id="manual-age" style={st.input} required type="number" min="1" max="15" value={manualForm.age} onChange={setManual("age")} data-testid="manual-age" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-date">Fecha de la fiesta *</label>
+                    <input id="manual-date" style={st.input} required type="date" value={manualForm.event_date} onChange={setManual("event_date")} data-testid="manual-date" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-time">Hora *</label>
+                    <input id="manual-time" style={st.input} required type="time" value={manualForm.event_time} onChange={setManual("event_time")} data-testid="manual-time" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-venue">Lugar</label>
+                    <input id="manual-venue" style={st.input} value={manualForm.venue} onChange={setManual("venue")} data-testid="manual-venue" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-whatsapp">WhatsApp para confirmaciones</label>
+                    <input id="manual-whatsapp" style={st.input} value={manualForm.whatsapp} onChange={setManual("whatsapp")} placeholder="573001234567" data-testid="manual-whatsapp" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-hosts">Firma (opcional)</label>
+                    <input id="manual-hosts" style={st.input} value={manualForm.host_names} onChange={setManual("host_names")} placeholder="Papás de..." data-testid="manual-hosts" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-amount">Monto cobrado (COP)</label>
+                    <input id="manual-amount" style={st.input} type="number" min="0" value={manualForm.amount_cop} onChange={setManual("amount_cop")} placeholder={`Por defecto: precio actual`} data-testid="manual-amount" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-email">Correo del cliente (opcional)</label>
+                    <input id="manual-email" style={st.input} type="email" value={manualForm.customer_email} onChange={setManual("customer_email")} data-testid="manual-email" />
+                  </div>
+                  <div>
+                    <label style={st.label} htmlFor="manual-note">Nota del pago (opcional)</label>
+                    <input id="manual-note" style={st.input} value={manualForm.payment_note} onChange={setManual("payment_note")} placeholder="Ej: pagó por Nequi al 310..." data-testid="manual-note" />
+                  </div>
+                </div>
+
+                <button type="submit" style={{ ...st.btn, marginTop: 16, opacity: manualSaving ? 0.6 : 1 }} disabled={manualSaving} data-testid="manual-submit">
+                  {manualSaving ? "Creando..." : "✅ Crear invitación pagada"}
+                </button>
+                {manualError && <div style={st.error}>{manualError}</div>}
+              </form>
+
+              {manualResult && (
+                <div style={{ marginTop: 18, padding: 14, background: "#0F172A", borderRadius: 10, border: "1px solid #334155" }} data-testid="manual-result">
+                  <div style={{ color: "#4ADE80", fontWeight: 700, marginBottom: 8 }}>🎉 ¡Invitación creada y marcada como pagada!</div>
+                  <label style={st.label}>Link para invitados</label>
+                  <div style={st.linkRow}>
+                    <input readOnly style={st.linkInput} value={`${window.location.origin}/i/${manualResult.id}`} data-testid="manual-public-link" />
+                  </div>
+                  <label style={{ ...st.label, marginTop: 10 }}>Link secreto de edición (envíalo al cliente)</label>
+                  <div style={st.linkRow}>
+                    <input readOnly style={st.linkInput} value={`${window.location.origin}/editar/${manualResult.id}/${manualResult.edit_token}`} data-testid="manual-edit-link" />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {data.by_month.length > 0 && (

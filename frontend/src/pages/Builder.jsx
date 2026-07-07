@@ -330,7 +330,12 @@ export default function Builder({ editMode = false }) {
           </div>
 
           <details className="advanced">
-            <summary>⚙️ Avanzado: guardar confirmaciones en Google Sheets</summary>
+            <summary>⚙️ Opcional: exportar confirmaciones también a Google Sheets</summary>
+            <p className="field-help advanced-intro">
+              No hace falta para ver quién confirmó — eso ya aparece solo, sin configurar nada, en el
+              panel de confirmaciones de tu invitación. Usa esto solo si además quieres una copia
+              automática en tu propia hoja de cálculo.
+            </p>
             <div className="field">
               <label className="field-label" htmlFor="input-script-url">URL de tu Google Apps Script (termina en /exec)</label>
               <input id="input-script-url" value={inv.script_url} onChange={set("script_url")} placeholder="https://script.google.com/macros/s/.../exec" data-testid="input-script-url" />

@@ -193,6 +193,7 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .advanced { margin: 0.5rem 0 1.5rem; border: 2px dashed #D1D5DB; border-radius: 1rem; padding: 0.75rem 1rem; }
 .advanced summary { cursor: pointer; font-weight: 800; font-size: 0.9rem; color: #4B5563; }
 .advanced .field { margin-top: 1rem; }
+.advanced-intro { margin-top: 0.75rem; line-height: 1.5; }
 
 .btn-save { width: 100%; text-align: center; }
 .btn-view-public { display: block; width: 100%; margin-top: 0.9rem; box-sizing: border-box; }

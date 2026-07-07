@@ -124,6 +124,29 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 }
 .builder-tabs button.active { background: var(--l-accent); }
 
+.rsvp-panel {
+  max-width: 900px; margin: 1.5rem auto 0; padding: 0 1.5rem;
+}
+.rsvp-panel-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.rsvp-panel-header h2 { font-size: 1.2rem; margin: 0; }
+.rsvp-panel-total { color: #16A34A; font-weight: 700; font-size: 0.95rem; }
+.rsvp-refresh-btn { padding: 0.5rem 1.1rem; font-size: 0.85rem; }
+.rsvp-empty {
+  background: #fff; border: 2px dashed #D1D5DB; border-radius: 1rem; padding: 1.5rem;
+  text-align: center; color: #6B7280; font-weight: 600; margin: 0;
+}
+.rsvp-list {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.9rem;
+  max-height: 340px; overflow-y: auto; padding: 0.25rem;
+}
+.rsvp-item { background: #fff; border: 2px solid #1F2937; border-radius: 1rem; padding: 0.9rem 1.1rem; box-shadow: 4px 4px 0 rgba(31,41,55,0.12); }
+.rsvp-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; margin-bottom: 0.3rem; }
+.rsvp-badge { font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+.rsvp-badge.yes { color: #16A34A; }
+.rsvp-badge.no { color: #DC2626; }
+.rsvp-item-meta { font-size: 0.85rem; color: #4B5563; font-weight: 600; }
+.rsvp-item-msg { font-size: 0.85rem; color: #374151; font-style: italic; margin: 0.5rem 0 0; }
+
 .builder-grid { display: grid; grid-template-columns: minmax(380px, 520px) 1fr; gap: 0; min-height: calc(100vh - 70px); }
 .builder-form { padding: 2rem 2rem 4rem; overflow-y: auto; background: #fff; border-right: 3px solid #1F2937; }
 .builder-form h1 { font-size: 1.75rem; margin: 0 0 1.5rem; }

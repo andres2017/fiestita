@@ -185,6 +185,24 @@ class TestRsvp:
                           json={"nombre": "X"})
         assert r.status_code == 404
 
+    def test_list_rsvps_valid_token(self, created_invitation):
+        r = requests.get(f"{API}/invitations/{created_invitation['id']}/rsvps",
+                         params={"token": created_invitation["edit_token"]})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["count"] >= 1
+        names = [x["nombre"] for x in data["rsvps"]]
+        assert "TEST_Pedro" in names
+
+    def test_list_rsvps_invalid_token(self, created_invitation):
+        r = requests.get(f"{API}/invitations/{created_invitation['id']}/rsvps",
+                         params={"token": "badtoken"})
+        assert r.status_code == 403
+
+    def test_list_rsvps_invitation_not_found(self):
+        r = requests.get(f"{API}/invitations/nonexistent-xyz/rsvps", params={"token": "x"})
+        assert r.status_code == 404
+
 
 # --- Payments / paywall ---
 class TestPayments:

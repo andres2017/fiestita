@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
@@ -37,6 +37,8 @@ export default function Builder({ editMode = false }) {
   const [tab, setTab] = useState("form");
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [priceCop, setPriceCop] = useState(null);
+  const [rsvps, setRsvps] = useState(null);
+  const [loadingRsvps, setLoadingRsvps] = useState(false);
 
   useEffect(() => {
     if (editMode && id && token) {
@@ -51,6 +53,22 @@ export default function Builder({ editMode = false }) {
       axios.get(`${API}/pricing`).then((r) => setPriceCop(r.data.price_cop)).catch(() => {});
     }
   }, [editMode]);
+
+  const loadRsvps = useCallback(() => {
+    if (!editMode || !id || !token) return;
+    setLoadingRsvps(true);
+    axios.get(`${API}/invitations/${id}/rsvps`, { params: { token } })
+      .then((r) => setRsvps(r.data))
+      .catch(() => {})
+      .finally(() => setLoadingRsvps(false));
+  }, [editMode, id, token]);
+
+  useEffect(() => { loadRsvps(); }, [loadRsvps]);
+
+  const isAttending = (asiste) => asiste.includes("✅") || /\bs[ií]\b/i.test(asiste);
+  const totalPersonas = rsvps
+    ? rsvps.rsvps.filter((r) => isAttending(r.asiste)).reduce((sum, r) => sum + Number(r.adultos || 0) + Number(r.ninos || 0), 0)
+    : 0;
 
   const set = (k) => (e) => setInv({ ...inv, [k]: e.target.value });
 
@@ -129,6 +147,39 @@ export default function Builder({ editMode = false }) {
           <button className={tab === "preview" ? "active" : ""} onClick={() => setTab("preview")} data-testid="tab-preview-btn">👀 Vista previa</button>
         </div>
       </nav>
+
+      {editMode && (
+        <section className="rsvp-panel" data-testid="rsvp-panel">
+          <div className="rsvp-panel-header">
+            <h2>
+              📋 Confirmaciones {rsvps ? `(${rsvps.count})` : ""}
+              {totalPersonas > 0 && <span className="rsvp-panel-total"> · {totalPersonas} personas confirmadas</span>}
+            </h2>
+            <button type="button" className="btn-outline rsvp-refresh-btn" onClick={loadRsvps} disabled={loadingRsvps} data-testid="rsvp-refresh-btn">
+              {loadingRsvps ? "Actualizando..." : "🔄 Actualizar"}
+            </button>
+          </div>
+          {!rsvps || rsvps.count === 0 ? (
+            <p className="rsvp-empty">Aún no hay confirmaciones. Comparte el link de invitados para empezar a recibirlas. 🎉</p>
+          ) : (
+            <div className="rsvp-list">
+              {rsvps.rsvps.map((r) => (
+                <div key={r.id} className="rsvp-item" data-testid="rsvp-item">
+                  <div className="rsvp-item-top">
+                    <strong>{r.nombre}</strong>
+                    <span className={`rsvp-badge ${isAttending(r.asiste) ? "yes" : "no"}`}>{r.asiste}</span>
+                  </div>
+                  <div className="rsvp-item-meta">
+                    {r.adultos} adulto{Number(r.adultos) === 1 ? "" : "s"} · {r.ninos} niño{Number(r.ninos) === 1 ? "" : "s"}
+                    {r.telefono && <> · {r.telefono}</>}
+                  </div>
+                  {r.mensaje && <p className="rsvp-item-msg">"{r.mensaje}"</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="builder-grid">
         <form onSubmit={save} className={`builder-form ${tab === "form" ? "" : "hide-mobile"}`}>

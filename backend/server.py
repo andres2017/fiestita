@@ -209,6 +209,18 @@ async def upload_video(request: Request, file: UploadFile = File(...)):
     return {"video_url": f"/uploads/videos/{filename}"}
 
 
+@api_router.get("/invitations/{inv_id}/rsvps")
+async def list_rsvps(inv_id: str, token: str = Query(...)):
+    doc = await db.invitations.find_one({"id": inv_id}, {"_id": 0, "edit_token": 1})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Invitación no encontrada")
+    if doc["edit_token"] != token:
+        raise HTTPException(status_code=403, detail="Link de edición inválido")
+    cursor = db.rsvps.find({"invitation_id": inv_id}, {"_id": 0}).sort("fecha_registro", -1)
+    rsvps = await cursor.to_list(2000)
+    return {"count": len(rsvps), "rsvps": rsvps}
+
+
 @api_router.post("/invitations/{inv_id}/rsvp")
 async def create_rsvp(inv_id: str, rsvp: RsvpCreate):
     doc = await db.invitations.find_one({"id": inv_id}, {"_id": 0})

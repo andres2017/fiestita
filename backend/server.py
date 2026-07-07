@@ -34,6 +34,7 @@ WOMPI_API_URL = os.environ['WOMPI_API_URL']
 WOMPI_CHECKOUT_URL = os.environ['WOMPI_CHECKOUT_URL']
 PRICE_CENTS = int(os.environ['PUBLISH_PRICE_CENTS'])
 CURRENCY = "COP"
+ADMIN_KEY = os.environ['ADMIN_KEY']
 
 STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
 EMERGENT_KEY = os.environ['EMERGENT_LLM_KEY']
@@ -176,6 +177,31 @@ async def create_rsvp(inv_id: str, rsvp: RsvpCreate):
 
 
 # ===== PAGOS WOMPI =====
+async def record_payment(tx: dict):
+    tx_id = tx.get("id", "")
+    if not tx_id:
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    inv = await db.invitations.find_one({"wompi_reference": tx.get("reference", "")}, {"_id": 0, "id": 1})
+    payment = {
+        "wompi_transaction_id": tx_id,
+        "reference": tx.get("reference", ""),
+        "status": tx.get("status", ""),
+        "amount_in_cents": tx.get("amount_in_cents") or 0,
+        "currency": tx.get("currency", "COP"),
+        "payment_method_type": tx.get("payment_method_type", ""),
+        "customer_email": tx.get("customer_email", ""),
+        "finalized_at": tx.get("finalized_at", ""),
+        "invitation_id": inv["id"] if inv else "",
+        "updated_at": now,
+    }
+    await db.payments.update_one(
+        {"wompi_transaction_id": tx_id},
+        {"$set": payment, "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": now}},
+        upsert=True,
+    )
+
+
 @api_router.post("/invitations/{inv_id}/checkout")
 async def create_checkout(inv_id: str, token: str = Query(...)):
     doc = await db.invitations.find_one({"id": inv_id}, {"_id": 0})
@@ -221,6 +247,7 @@ async def verify_payment(inv_id: str, transaction_id: str = Query(...)):
             or tx.get("currency") != CURRENCY):
         raise HTTPException(status_code=400, detail="La transacción no corresponde a esta invitación")
     tx_status = tx.get("status", "")
+    await record_payment(tx)
     updates = {"payment_status": tx_status, "wompi_transaction_id": tx.get("id", "")}
     if tx_status == "APPROVED":
         updates["paid"] = True
@@ -244,12 +271,52 @@ async def wompi_webhook(request: Request):
     if checksum != sig.get("checksum"):
         raise HTTPException(status_code=403, detail="Firma de evento inválida")
     tx = data.get("transaction", {})
+    await record_payment(tx)
     if tx.get("status") == "APPROVED" and tx.get("amount_in_cents") == PRICE_CENTS and tx.get("currency") == CURRENCY:
         await db.invitations.update_one(
             {"wompi_reference": tx.get("reference")},
             {"$set": {"paid": True, "payment_status": "APPROVED", "wompi_transaction_id": tx.get("id", "")}},
         )
     return {"received": True}
+
+
+@api_router.get("/admin/sales")
+async def admin_sales(request: Request):
+    key = request.headers.get("X-Admin-Key", "")
+    if not key or not secrets.compare_digest(key, ADMIN_KEY):
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+    payments = await db.payments.find({"status": "APPROVED"}, {"_id": 0}).sort("created_at", -1).to_list(2000)
+
+    inv_ids = [p["invitation_id"] for p in payments if p.get("invitation_id")]
+    inv_map = {}
+    if inv_ids:
+        cursor = db.invitations.find(
+            {"id": {"$in": inv_ids}},
+            {"_id": 0, "id": 1, "child_name": 1, "theme": 1, "event_date": 1},
+        )
+        async for doc in cursor:
+            inv_map[doc["id"]] = doc
+
+    sales = []
+    total_cents = 0
+    by_month = {}
+    for p in payments:
+        cents = p.get("amount_in_cents") or 0
+        total_cents += cents
+        month = (p.get("created_at") or "")[:7] or "sin-fecha"
+        by_month[month] = by_month.get(month, 0) + cents
+        sales.append({**p, "invitation": inv_map.get(p.get("invitation_id"))})
+
+    return {
+        "count": len(sales),
+        "total_cop": total_cents / 100,
+        "by_month": [
+            {"month": m, "total_cop": c / 100}
+            for m, c in sorted(by_month.items(), reverse=True)
+        ],
+        "sales": sales,
+    }
 
 
 # ===== FOTOS Y VIDEOS =====

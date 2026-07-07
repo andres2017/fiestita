@@ -8,7 +8,7 @@ const CONTACT_WHATSAPP = "573108175926";
 const contactWaUrl = `https://wa.me/${CONTACT_WHATSAPP}?text=${encodeURIComponent(
   "¡Hola! Vi Invitaciones Digitales Fiestita y quiero que me ayuden a crear una invitación 🎉"
 )}`;
-const NEW_THEME_IDS = ["mundial", "boda", "fiesta_adultos"];
+const NEW_THEME_IDS = ["cumbre", "cielito", "llama_viva", "tardeo", "gloria", "aguinaldos"];
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -30,12 +30,12 @@ export default function Landing() {
 
       <header className="landing-hero">
         <div className="landing-hero-text">
-          <span className="landing-tag">🔥 Nuevo: temática Mundial</span>
+          <span className="landing-tag">🔥 Nuevo: 6 categorías más</span>
           <h1>Invitaciones digitales <span className="hl">para cada celebración</span></h1>
           <p>
-            Cumpleaños, bodas, el partido del Mundial o la excusa que se te ocurra: elige una temática,
-            escribe los datos y comparte un link único con cuenta regresiva, mapa, confirmación de
-            asistencia y botón de WhatsApp. 🎉
+            Cumpleaños, bodas, el partido, conferencias, bautizos, confirmaciones, parches, retos
+            deportivos o la novena de aguinaldos: elige una temática, escribe los datos y comparte un
+            link único con cuenta regresiva, mapa, confirmación de asistencia y botón de WhatsApp. 🎉
           </p>
           <div className="landing-cta">
             <Link to="/crear" className="btn-primary" data-testid="hero-create-btn">🎉 Crear mi invitación</Link>

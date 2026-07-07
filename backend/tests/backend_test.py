@@ -92,6 +92,15 @@ class TestCreate:
             })
             assert r.status_code == 200, f"{theme}: {r.text}"
 
+    def test_create_expanded_category_themes_accepted(self):
+        for theme in ["cumbre", "cielito", "llama_viva", "tardeo", "gloria", "aguinaldos"]:
+            r = requests.post(f"{API}/invitations", json={
+                "theme": theme, "child_name": "TEST_Tema", "age": 5,
+                "event_date": "2026-12-01", "event_time": "10:00",
+                "event_subtitle": "Nota de prueba",
+            })
+            assert r.status_code == 200, f"{theme}: {r.text}"
+
 
 # --- Public GET ---
 class TestGetPublic:

@@ -43,6 +43,12 @@ THEME_CATEGORY = {
     "fiesta_adultos": "cumple_adulto",
     "boda": "boda",
     "mundial": "partido",
+    "cumbre": "conferencia",
+    "cielito": "bautizo",
+    "llama_viva": "confirmacion",
+    "tardeo": "parche",
+    "gloria": "reto_deportivo",
+    "aguinaldos": "novena",
 }
 VALID_THEMES = set(THEME_CATEGORY.keys())
 

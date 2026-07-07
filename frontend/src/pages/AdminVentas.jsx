@@ -268,7 +268,7 @@ export default function AdminVentas() {
                   {manualFieldConfig.showAge && (
                     <div>
                       <label style={st.label} htmlFor="manual-age">{manualFieldConfig.ageLabel}</label>
-                      <input id="manual-age" style={st.input} required type="number" min="1" max="110" value={manualForm.age} onChange={setManual("age")} data-testid="manual-age" />
+                      <input id="manual-age" style={st.input} required type="number" min={manualFieldConfig.ageMin || 1} max={manualFieldConfig.ageMax || 110} value={manualForm.age} onChange={setManual("age")} data-testid="manual-age" />
                     </div>
                   )}
                   {manualFieldConfig.showSubtitle && (

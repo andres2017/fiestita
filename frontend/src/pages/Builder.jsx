@@ -250,12 +250,12 @@ export default function Builder({ editMode = false }) {
             {fieldConfig.showAge && (
               <div className="field field-sm">
                 <label className="field-label" htmlFor="input-age">{fieldConfig.ageLabel}</label>
-                <input id="input-age" required type="number" min="1" max="110" value={inv.age} onChange={set("age")} placeholder="2" data-testid="input-age" />
+                <input id="input-age" required type="number" min={fieldConfig.ageMin || 1} max={fieldConfig.ageMax || 110} value={inv.age} onChange={set("age")} placeholder="2" data-testid="input-age" />
               </div>
             )}
           </div>
 
-          {fieldConfig.showAge && (
+          {fieldConfig.showFullName && (
             <div className="field">
               <label className="field-label" htmlFor="input-full-name">Nombre completo (opcional)</label>
               <input id="input-full-name" value={inv.child_full_name} onChange={set("child_full_name")} placeholder="Gabriel Alejandro Vargas Cetina" data-testid="input-full-name" />

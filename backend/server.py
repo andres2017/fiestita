@@ -25,7 +25,10 @@ db = client[os.environ['DB_NAME']]
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
-VALID_THEMES = {"videojuegos", "princesas", "superheroes", "dinosaurios", "espacio", "unicornios"}
+VALID_THEMES = {
+    "videojuegos", "princesas", "superheroes", "dinosaurios", "espacio", "unicornios",
+    "magia", "circo", "piratas", "sirenas", "safari", "granja",
+}
 
 # --- Pagos / administración -------------------------------------------------
 # ADMIN_KEY: clave secreta para acceder al panel "Mis ventas" (header X-Admin-Key).

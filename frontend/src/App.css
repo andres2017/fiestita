@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Press+Start+2P&family=Dancing+Script:wght@500;700&family=Bangers&family=Bowlby+One+SC&family=Space+Grotesk:wght@400;600;700&family=Caveat+Brush&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Press+Start+2P&family=Dancing+Script:wght@500;700&family=Bangers&family=Bowlby+One+SC&family=Space+Grotesk:wght@400;600;700&family=Caveat+Brush&family=Cinzel+Decorative:wght@700;900&family=Bungee&family=Pirata+One&family=Comfortaa:wght@600;700&family=Baloo+2:wght@600;700&family=Chewy&display=swap');
 
 :root {
   --l-primary: #FF6B6B;
@@ -60,6 +60,8 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
   width: 100%; border-radius: 2rem; border: 4px solid #1F2937;
   box-shadow: 10px 10px 0 var(--l-accent); transform: rotate(2deg);
 }
+.landing-cta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.landing-price { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--l-secondary); font-size: 1.05rem; }
 
 .landing-themes { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 .landing-themes h2, .landing-steps h2 { font-size: 2rem; margin-bottom: 0.5rem; }
@@ -91,7 +93,26 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .step-card h3 { margin: 0.5rem 0; }
 .step-card p { color: #4B5563; line-height: 1.6; margin: 0; }
 
-.landing-footer { text-align: center; padding: 2.5rem 1rem; color: #6B7280; font-weight: 600; }
+.landing-help { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+.landing-help-card {
+  background: #ECFDF5; border: 3px solid #1F2937; border-radius: 1.75rem; padding: 2.5rem;
+  text-align: center; box-shadow: 7px 7px 0 rgba(37,211,102,0.3);
+}
+.landing-help-card h2 { margin: 0 0 0.5rem; }
+.landing-help-card p { color: #4B5563; margin: 0 0 1.5rem; font-size: 1.05rem; }
+
+.landing-footer { text-align: center; padding: 2.5rem 1rem 5rem; color: #6B7280; font-weight: 600; }
+.landing-footer p { margin: 0; }
+.landing-admin-link { display: inline-block; margin-top: 0.6rem; color: #9CA3AF; font-size: 0.8rem; text-decoration: underline; }
+.landing-admin-link:hover { color: #6B7280; }
+
+.whatsapp-fab {
+  position: fixed; bottom: 20px; right: 20px; width: 58px; height: 58px; border-radius: 50%;
+  background: #25D366; border: 3px solid #128C7E; display: grid; place-items: center;
+  font-size: 1.7rem; text-decoration: none; box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  z-index: 999; transition: transform 0.2s ease-out;
+}
+.whatsapp-fab:hover { transform: scale(1.08); }
 
 /* ===== BUILDER ===== */
 .builder { min-height: 100vh; }

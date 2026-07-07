@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { THEME_LIST } from "../themes";
@@ -31,13 +31,12 @@ const EMPTY = {
 export default function Builder({ editMode = false }) {
   const { id, token } = useParams();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [inv, setInv] = useState({ ...EMPTY, theme: searchParams.get("tema") || "videojuegos" });
   const [saving, setSaving] = useState(false);
-  const [created, setCreated] = useState(null);
   const [loadError, setLoadError] = useState(false);
   const [tab, setTab] = useState("form");
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [priceCop, setPriceCop] = useState(null);
 
   useEffect(() => {
     if (editMode && id && token) {
@@ -46,6 +45,12 @@ export default function Builder({ editMode = false }) {
         .catch(() => setLoadError(true));
     }
   }, [editMode, id, token]);
+
+  useEffect(() => {
+    if (!editMode) {
+      axios.get(`${API}/pricing`).then((r) => setPriceCop(r.data.price_cop)).catch(() => {});
+    }
+  }, [editMode]);
 
   const set = (k) => (e) => setInv({ ...inv, [k]: e.target.value });
 
@@ -83,21 +88,25 @@ export default function Builder({ editMode = false }) {
         toast.success("¡Invitación actualizada! 🎉");
       } else {
         const r = await axios.post(`${API}/invitations`, payload);
-        setCreated(r.data);
+        const { id: newId, edit_token, checkout } = r.data;
+        if (!checkout) {
+          toast.error("Los pagos no están disponibles en este momento. Intenta más tarde.");
+          return;
+        }
+        const params = new URLSearchParams({
+          "public-key": checkout.public_key,
+          currency: checkout.currency,
+          "amount-in-cents": String(checkout.amount_in_cents),
+          reference: checkout.reference,
+          "signature:integrity": checkout.signature,
+          "redirect-url": `${window.location.origin}/pago/${newId}/${edit_token}`,
+        });
+        window.location.href = `https://checkout.wompi.co/p/?${params.toString()}`;
       }
     } catch (err) {
       toast.error(err?.response?.data?.detail || "No se pudo guardar. Revisa los datos e inténtalo de nuevo.");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const copyText = async (text, label) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success(`${label} copiado 📋`);
-    } catch {
-      toast.error(`No se pudo copiar ${label.toLowerCase()}. Selecciónalo y cópialo manualmente.`);
     }
   };
 
@@ -107,41 +116,6 @@ export default function Builder({ editMode = false }) {
         <h2>😢 Link de edición inválido</h2>
         <p>Revisa que el link secreto esté completo o crea una nueva invitación.</p>
         <Link to="/crear" className="btn-primary">Crear nueva invitación</Link>
-      </div>
-    );
-  }
-
-  if (created) {
-    const publicUrl = `${window.location.origin}/i/${created.id}`;
-    const editUrl = `${window.location.origin}/editar/${created.id}/${created.edit_token}`;
-    return (
-      <div className="success-screen" data-testid="success-screen">
-        <div className="success-card">
-          <div className="success-confetti">🎉🎂🎈✨🎁</div>
-          <h1>¡Tu invitación está lista!</h1>
-          <p>Comparte el link con tus invitados y guarda el link secreto para editarla cuando quieras.</p>
-
-          <div className="link-box">
-            <label>🔗 Link para invitados (compártelo)</label>
-            <div className="link-row">
-              <input readOnly value={publicUrl} data-testid="public-link-input" />
-              <button onClick={() => copyText(publicUrl, "Link público")} data-testid="copy-public-link-btn">Copiar</button>
-            </div>
-          </div>
-
-          <div className="link-box link-box-secret">
-            <label>🔒 Link secreto de edición (¡no lo compartas!)</label>
-            <div className="link-row">
-              <input readOnly value={editUrl} data-testid="edit-link-input" />
-              <button onClick={() => copyText(editUrl, "Link de edición")} data-testid="copy-edit-link-btn">Copiar</button>
-            </div>
-          </div>
-
-          <div className="success-actions">
-            <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" data-testid="view-invitation-btn">👀 Ver invitación</a>
-            <button className="btn-outline" onClick={() => navigate(`/editar/${created.id}/${created.edit_token}`)} data-testid="go-edit-btn">✏️ Seguir editando</button>
-          </div>
-        </div>
       </div>
     );
   }
@@ -280,7 +254,13 @@ export default function Builder({ editMode = false }) {
           </details>
 
           <button type="submit" disabled={saving} className="btn-primary btn-save" data-testid="save-invitation-btn">
-            {saving ? "Guardando..." : editMode ? "💾 Guardar cambios" : "🎉 Crear invitación"}
+            {saving
+              ? "Guardando..."
+              : editMode
+                ? "💾 Guardar cambios"
+                : priceCop
+                  ? `💳 Pagar $${priceCop.toLocaleString("es-CO")} y crear`
+                  : "💳 Pagar y crear invitación"}
           </button>
           {editMode && (
             <a href={`/i/${id}`} target="_blank" rel="noopener noreferrer" className="btn-outline btn-view-public" data-testid="view-public-btn">

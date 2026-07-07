@@ -33,6 +33,9 @@ VALID_THEMES = {"videojuegos", "princesas", "superheroes", "dinosaurios", "espac
 # usado para verificar la firma de los webhooks.
 ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
 WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', '')
+WOMPI_PUBLIC_KEY = os.environ.get('WOMPI_PUBLIC_KEY', '')
+WOMPI_INTEGRITY_SECRET = os.environ.get('WOMPI_INTEGRITY_SECRET', '')
+INVITATION_PRICE_COP = int(os.environ.get('INVITATION_PRICE_COP', '59000'))
 PAYMENT_REFERENCE_PREFIX = "FIESTITA-"
 
 UPLOADS_DIR = ROOT_DIR / "uploads"
@@ -102,6 +105,7 @@ class Invitation(InvitationData):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     edit_token: str = Field(default_factory=lambda: secrets.token_urlsafe(16))
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    paid: bool = False
 
 
 class RsvpCreate(BaseModel):
@@ -119,19 +123,39 @@ async def root():
     return {"message": "Invitaciones API"}
 
 
+@api_router.get("/pricing")
+async def get_pricing():
+    return {"price_cop": INVITATION_PRICE_COP}
+
+
 @api_router.post("/invitations")
 async def create_invitation(data: InvitationData):
+    if not WOMPI_PUBLIC_KEY or not WOMPI_INTEGRITY_SECRET:
+        raise HTTPException(status_code=503, detail="Pagos no configurados (falta WOMPI_PUBLIC_KEY o WOMPI_INTEGRITY_SECRET)")
     if data.theme not in VALID_THEMES:
         raise HTTPException(status_code=400, detail="Temática inválida")
     _validate_invitation_links(data)
     inv = Invitation(**data.model_dump())
     await db.invitations.insert_one(inv.model_dump())
-    return {"id": inv.id, "edit_token": inv.edit_token}
+
+    amount_in_cents = INVITATION_PRICE_COP * 100
+    reference = f"{PAYMENT_REFERENCE_PREFIX}{inv.id}"
+    return {
+        "id": inv.id,
+        "edit_token": inv.edit_token,
+        "checkout": {
+            "public_key": WOMPI_PUBLIC_KEY,
+            "currency": "COP",
+            "amount_in_cents": amount_in_cents,
+            "reference": reference,
+            "signature": _wompi_integrity_signature(reference, amount_in_cents, "COP"),
+        },
+    }
 
 
 @api_router.get("/invitations/{inv_id}")
 async def get_invitation(inv_id: str):
-    doc = await db.invitations.find_one({"id": inv_id}, {"_id": 0, "edit_token": 0, "script_url": 0})
+    doc = await db.invitations.find_one({"id": inv_id, "paid": True}, {"_id": 0, "edit_token": 0, "script_url": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Invitación no encontrada")
     return doc
@@ -216,6 +240,13 @@ async def create_rsvp(inv_id: str, rsvp: RsvpCreate):
 # ============================================================================
 # Pagos Wompi + panel "Mis ventas"
 # ============================================================================
+
+def _wompi_integrity_signature(reference: str, amount_in_cents: int, currency: str) -> str:
+    """Firma de integridad que exige el Web Checkout de Wompi para que el monto/referencia
+    no puedan alterarse desde el navegador: SHA-256 de <referencia><monto><moneda><secreto>."""
+    concat = f"{reference}{amount_in_cents}{currency}{WOMPI_INTEGRITY_SECRET}"
+    return hashlib.sha256(concat.encode("utf-8")).hexdigest()
+
 
 def _wompi_checksum(body: dict) -> str:
     """Recalcula el checksum del evento según la documentación de Wompi:

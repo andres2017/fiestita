@@ -5,6 +5,7 @@ import Landing from "./pages/Landing";
 import Builder from "./pages/Builder";
 import InvitationPage from "./pages/InvitationPage";
 import AdminVentas from "./pages/AdminVentas";
+import PaymentReturn from "./pages/PaymentReturn";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/crear" element={<Builder />} />
         <Route path="/editar/:id/:token" element={<Builder editMode />} />
         <Route path="/i/:id" element={<InvitationPage />} />
+        <Route path="/pago/:id/:token" element={<PaymentReturn />} />
         <Route path="/admin/ventas" element={<AdminVentas />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

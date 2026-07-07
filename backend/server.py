@@ -7,6 +7,7 @@ import os
 import re
 import logging
 import httpx
+import hashlib
 import secrets
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
@@ -25,6 +26,14 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 VALID_THEMES = {"videojuegos", "princesas", "superheroes", "dinosaurios", "espacio", "unicornios"}
+
+# --- Pagos / administración -------------------------------------------------
+# ADMIN_KEY: clave secreta para acceder al panel "Mis ventas" (header X-Admin-Key).
+# WOMPI_EVENTS_SECRET: secreto de eventos de Wompi (pestaña Programadores),
+# usado para verificar la firma de los webhooks.
+ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
+WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', '')
+PAYMENT_REFERENCE_PREFIX = "FIESTITA-"
 
 UPLOADS_DIR = ROOT_DIR / "uploads"
 VIDEOS_DIR = UPLOADS_DIR / "videos"
@@ -202,6 +211,124 @@ async def create_rsvp(inv_id: str, rsvp: RsvpCreate):
         except Exception as e:
             logging.getLogger(__name__).warning(f"Apps Script forward failed: {e}")
     return {"ok": True, "sheet_forwarded": forwarded}
+
+
+# ============================================================================
+# Pagos Wompi + panel "Mis ventas"
+# ============================================================================
+
+def _wompi_checksum(body: dict) -> str:
+    """Recalcula el checksum del evento según la documentación de Wompi:
+    SHA-256 de la concatenación de los valores de signature.properties (en orden),
+    el timestamp del evento y el secreto de eventos."""
+    signature = body.get("signature") or {}
+    props = signature.get("properties") or []
+    data = body.get("data") or {}
+    concat = ""
+    for prop in props:
+        val = data
+        for part in str(prop).split("."):
+            val = val.get(part, "") if isinstance(val, dict) else ""
+        concat += str(val)
+    concat += str(body.get("timestamp", ""))
+    concat += WOMPI_EVENTS_SECRET
+    return hashlib.sha256(concat.encode("utf-8")).hexdigest()
+
+
+@api_router.post("/webhooks/wompi")
+async def wompi_webhook(request: Request):
+    """Recibe eventos de Wompi. Registra/actualiza la transacción en `payments`
+    (idempotente por wompi_transaction_id) y, si queda APPROVED y la referencia
+    es FIESTITA-<id>, marca la invitación como pagada."""
+    if not WOMPI_EVENTS_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook de Wompi no configurado (falta WOMPI_EVENTS_SECRET)")
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Cuerpo inválido")
+
+    signature = body.get("signature") or {}
+    expected = _wompi_checksum(body)
+    received = str(signature.get("checksum", ""))
+    if not received or not secrets.compare_digest(expected.lower(), received.lower()):
+        raise HTTPException(status_code=403, detail="Firma de Wompi inválida")
+
+    tx = (body.get("data") or {}).get("transaction") or {}
+    if body.get("event") == "transaction.updated" and tx.get("id"):
+        now = datetime.now(timezone.utc).isoformat()
+        payment = {
+            "wompi_transaction_id": tx.get("id", ""),
+            "reference": tx.get("reference", ""),
+            "status": tx.get("status", ""),
+            "amount_in_cents": tx.get("amount_in_cents") or 0,
+            "currency": tx.get("currency", "COP"),
+            "payment_method_type": tx.get("payment_method_type", ""),
+            "customer_email": tx.get("customer_email", ""),
+            "finalized_at": tx.get("finalized_at", ""),
+            "updated_at": now,
+        }
+        await db.payments.update_one(
+            {"wompi_transaction_id": payment["wompi_transaction_id"]},
+            {"$set": payment, "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": now}},
+            upsert=True,
+        )
+        if payment["status"] == "APPROVED" and payment["reference"].startswith(PAYMENT_REFERENCE_PREFIX):
+            inv_id = payment["reference"][len(PAYMENT_REFERENCE_PREFIX):]
+            await db.invitations.update_one({"id": inv_id}, {"$set": {"paid": True, "paid_at": now}})
+
+    return {"ok": True}
+
+
+def _require_admin(request: Request) -> None:
+    key = request.headers.get("X-Admin-Key", "")
+    if not ADMIN_KEY or not key or not secrets.compare_digest(key, ADMIN_KEY):
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+
+@api_router.get("/admin/sales")
+async def admin_sales(request: Request):
+    """Panel privado: lista los pagos APPROVED de Wompi con la invitación asociada,
+    total de ingresos en COP y desglose por mes. Requiere header X-Admin-Key."""
+    _require_admin(request)
+
+    payments = await db.payments.find({"status": "APPROVED"}, {"_id": 0}).sort("created_at", -1).to_list(2000)
+
+    inv_ids = [
+        p["reference"][len(PAYMENT_REFERENCE_PREFIX):]
+        for p in payments
+        if p.get("reference", "").startswith(PAYMENT_REFERENCE_PREFIX)
+    ]
+    inv_map = {}
+    if inv_ids:
+        cursor = db.invitations.find(
+            {"id": {"$in": inv_ids}},
+            {"_id": 0, "id": 1, "child_name": 1, "theme": 1, "event_date": 1, "paid": 1},
+        )
+        async for doc in cursor:
+            inv_map[doc["id"]] = doc
+
+    sales = []
+    total_cents = 0
+    by_month: dict = {}
+    for p in payments:
+        cents = p.get("amount_in_cents") or 0
+        total_cents += cents
+        month = (p.get("created_at") or "")[:7] or "sin-fecha"
+        by_month[month] = by_month.get(month, 0) + cents
+        ref = p.get("reference", "")
+        inv = inv_map.get(ref[len(PAYMENT_REFERENCE_PREFIX):]) if ref.startswith(PAYMENT_REFERENCE_PREFIX) else None
+        sales.append({**p, "invitation": inv})
+
+    return {
+        "count": len(sales),
+        "total_cop": total_cents / 100,
+        "by_month": [
+            {"month": m, "total_cop": c / 100}
+            for m, c in sorted(by_month.items(), reverse=True)
+        ],
+        "sales": sales,
+    }
 
 
 app.include_router(api_router)

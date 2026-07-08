@@ -44,6 +44,7 @@ const EMPTY_MANUAL = {
   whatsapp: "",
   host_names: "",
   event_subtitle: "",
+  reveal_effect: false,
   amount_cop: "",
   customer_email: "",
   payment_note: "",
@@ -78,6 +79,9 @@ const st = {
   categoryChips: { display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0 4px" },
   categoryChip: { background: "transparent", color: "#94A3B8", border: "1px solid #334155", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer" },
   categoryChipActive: { background: "#8B5CF6", color: "#fff", borderColor: "#8B5CF6" },
+  revealToggle: { display: "flex", alignItems: "flex-start", gap: 10, background: "#0F172A", border: "1px solid #334155", borderRadius: 10, padding: "12px 14px", margin: "4px 0 4px", cursor: "pointer" },
+  revealToggleText: { fontSize: 13, color: "#E2E8F0", fontWeight: 700 },
+  revealToggleSmall: { display: "block", fontSize: 12, color: "#94A3B8", fontWeight: 500, marginTop: 2 },
 };
 
 export default function AdminVentas() {
@@ -252,6 +256,19 @@ export default function AdminVentas() {
               </div>
 
               <form onSubmit={crearManual}>
+                <label style={st.revealToggle} htmlFor="manual-reveal-effect">
+                  <input
+                    id="manual-reveal-effect"
+                    type="checkbox"
+                    checked={manualForm.reveal_effect}
+                    onChange={(e) => setManualForm({ ...manualForm, reveal_effect: e.target.checked })}
+                    data-testid="manual-reveal-effect"
+                  />
+                  <span style={st.revealToggleText}>
+                    ✨ Efecto sorpresa al abrir (opcional)
+                    <small style={st.revealToggleSmall}>El invitado ve un sobre cerrado que abre con un toque.</small>
+                  </span>
+                </label>
                 <div style={st.manualGrid}>
                   <div>
                     <label style={st.label} htmlFor="manual-theme">Temática</label>

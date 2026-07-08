@@ -137,6 +137,7 @@ class InvitationData(BaseModel):
     script_url: str = ""
     host_names: str = ""
     video_url: str = ""
+    reveal_effect: bool = False
 
 
 class Invitation(InvitationData):

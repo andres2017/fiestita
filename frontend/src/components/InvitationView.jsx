@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { THEMES, CATEGORY_FIELDS, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
+import { InvitationReveal } from "./InvitationReveal";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
@@ -38,6 +39,8 @@ export const InvitationView = ({ inv, preview = false }) => {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(false);
+  const [opened, setOpened] = useState(!inv.reveal_effect);
+  useEffect(() => { setOpened(!inv.reveal_effect); }, [inv.reveal_effect]);
 
   const styleVars = {
     "--inv-bg": c.bg,
@@ -73,6 +76,21 @@ export const InvitationView = ({ inv, preview = false }) => {
   const name = inv.child_name || CATEGORY_FIELDS[theme.category]?.fallbackName || "Tu invitado";
   const age = inv.age || "?";
   const dispInv = { ...inv, child_name: name, age };
+
+  if (!opened) {
+    return (
+      <div className={`inv-root ${theme.dark ? "inv-dark" : "inv-light"}`} style={styleVars}>
+        <InvitationReveal
+          emoji={theme.emoji}
+          themeName={theme.name}
+          guestLabel={name}
+          decorations={theme.decorations}
+          dark={theme.dark}
+          onOpen={() => setOpened(true)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`inv-root ${theme.dark ? "inv-dark" : "inv-light"}`} style={styleVars} data-testid="invitation-view">

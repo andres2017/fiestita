@@ -27,6 +27,7 @@ const EMPTY = {
   script_url: "",
   host_names: "",
   video_url: "",
+  reveal_effect: false,
 };
 
 export default function Builder({ editMode = false }) {
@@ -241,6 +242,20 @@ export default function Builder({ editMode = false }) {
               </button>
             ))}
           </div>
+
+          <label className="reveal-toggle" htmlFor="input-reveal-effect">
+            <input
+              id="input-reveal-effect"
+              type="checkbox"
+              checked={inv.reveal_effect}
+              onChange={(e) => setInv({ ...inv, reveal_effect: e.target.checked })}
+              data-testid="input-reveal-effect"
+            />
+            <span>
+              ✨ Efecto sorpresa al abrir <em>(opcional)</em>
+              <small>Los invitados ven un sobre cerrado que abren con un toque, y tu invitación aparece con una animación.</small>
+            </span>
+          </label>
 
           <div className="field-row">
             <div className={fieldConfig.showAge ? "field" : "field field-full"}>

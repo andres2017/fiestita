@@ -92,6 +92,26 @@ class TestCreate:
             })
             assert r.status_code == 200, f"{theme}: {r.text}"
 
+    def test_create_reveal_effect_defaults_false_and_is_settable(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_SinSorpresa", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+        })
+        assert r.status_code == 200, r.text
+        d = r.json()
+        edited = requests.get(f"{API}/invitations/{d['id']}/edit", params={"token": d["edit_token"]})
+        assert edited.json()["reveal_effect"] is False
+
+        r2 = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_ConSorpresa", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+            "reveal_effect": True,
+        })
+        assert r2.status_code == 200, r2.text
+        d2 = r2.json()
+        edited2 = requests.get(f"{API}/invitations/{d2['id']}/edit", params={"token": d2["edit_token"]})
+        assert edited2.json()["reveal_effect"] is True
+
     def test_create_expanded_category_themes_accepted(self):
         for theme in ["cumbre", "cielito", "llama_viva", "tardeo", "gloria", "aguinaldos"]:
             r = requests.post(f"{API}/invitations", json={

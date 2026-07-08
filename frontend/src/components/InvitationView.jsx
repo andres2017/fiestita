@@ -13,6 +13,9 @@ const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
 const ELEGANT_REVEAL_CATEGORIES = new Set(["boda", "cumple_adulto"]);
 
+// Uploaded media may be a full URL (Cloudflare R2) or a legacy local backend path.
+const mediaUrl = (u) => (!u ? u : u.startsWith("http") ? u : `${BACKEND_BASE}${u}`);
+
 function useCountdown(dateStr, timeStr) {
   const [left, setLeft] = useState(null);
   useEffect(() => {
@@ -127,7 +130,7 @@ export const InvitationView = ({ inv, preview = false }) => {
           <section className="inv-card">
             <h2 className="inv-section-title">🎥 Video</h2>
             <video
-              src={`${BACKEND_BASE}${inv.video_url}`}
+              src={mediaUrl(inv.video_url)}
               controls
               playsInline
               className="inv-video"
@@ -138,7 +141,7 @@ export const InvitationView = ({ inv, preview = false }) => {
 
         {/* PHOTO GALLERY */}
         {inv.photo_urls?.length > 0 && (
-          <InvitationPhotoGallery photos={inv.photo_urls.map((u) => `${BACKEND_BASE}${u}`)} />
+          <InvitationPhotoGallery photos={inv.photo_urls.map(mediaUrl)} />
         )}
 
         {/* SONG */}

@@ -127,33 +127,33 @@ export default function Builder({ editMode = false }) {
 
   const removeVideo = () => setInv((prev) => ({ ...prev, video_url: "" }));
 
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const handlePhotoChange = async (e) => {
+  const [uploadingPhotoSlot, setUploadingPhotoSlot] = useState(null);
+  const handlePhotoSlotChange = (slotIndex) => async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (inv.photo_urls.length >= MAX_PHOTOS) {
-      toast.error(`Máximo ${MAX_PHOTOS} fotos.`);
-      return;
-    }
     if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
       toast.error(`Cada foto no puede pesar más de ${MAX_PHOTO_MB}MB.`);
       return;
     }
     const formData = new FormData();
     formData.append("file", file);
-    setUploadingPhoto(true);
+    setUploadingPhotoSlot(slotIndex);
     try {
       const r = await axios.post(`${API}/uploads/photo`, formData);
-      setInv((prev) => ({ ...prev, photo_urls: [...prev.photo_urls, r.data.photo_url] }));
+      setInv((prev) => {
+        const next = [...prev.photo_urls];
+        next[slotIndex] = r.data.photo_url;
+        return { ...prev, photo_urls: next };
+      });
       toast.success("¡Foto subida! 📸");
     } catch (err) {
       toast.error(err?.response?.data?.detail || "No se pudo subir la foto. Inténtalo de nuevo.");
     } finally {
-      setUploadingPhoto(false);
+      setUploadingPhotoSlot(null);
     }
   };
-  const removePhoto = (url) => setInv((prev) => ({ ...prev, photo_urls: prev.photo_urls.filter((u) => u !== url) }));
+  const removePhotoSlot = (slotIndex) => setInv((prev) => ({ ...prev, photo_urls: prev.photo_urls.filter((_, i) => i !== slotIndex) }));
 
   const addItineraryItem = () => setInv((prev) => ({ ...prev, itinerary: [...prev.itinerary, { time: "", label: "", emoji: "" }] }));
   const updateItineraryItem = (i, key) => (e) =>
@@ -380,7 +380,7 @@ export default function Builder({ editMode = false }) {
             {inv.video_url ? (
               <div className="video-upload-preview">
                 <video
-                  src={`${BACKEND_BASE}${inv.video_url}`}
+                  src={inv.video_url.startsWith("http") ? inv.video_url : `${BACKEND_BASE}${inv.video_url}`}
                   controls
                   className="video-upload-player"
                   data-testid="video-upload-preview"
@@ -405,30 +405,38 @@ export default function Builder({ editMode = false }) {
           </div>
 
           <div className="field">
-            <label className="field-label" htmlFor="input-photo">Fotos para tu invitación (opcional, máx. {MAX_PHOTOS})</label>
-            {inv.photo_urls.length > 0 && (
-              <div className="photo-upload-grid" data-testid="photo-upload-grid">
-                {inv.photo_urls.map((url) => (
-                  <div className="photo-upload-item" key={url}>
-                    <img src={`${BACKEND_BASE}${url}`} alt="" data-testid="photo-upload-preview" />
-                    <button type="button" className="photo-upload-remove" onClick={() => removePhoto(url)} data-testid="remove-photo-btn">✕</button>
+            <label className="field-label">Fotos para tu invitación (opcional, hasta {MAX_PHOTOS})</label>
+            <div className="photo-slots" data-testid="photo-slots">
+              {Array.from({ length: MAX_PHOTOS }, (_, i) => i).map((slotIndex) => {
+                const url = inv.photo_urls[slotIndex];
+                const isUploading = uploadingPhotoSlot === slotIndex;
+                const src = url ? (url.startsWith("http") ? url : `${BACKEND_BASE}${url}`) : null;
+                return (
+                  <div className="photo-slot" key={slotIndex}>
+                    {url ? (
+                      <div className="photo-slot-filled">
+                        <img src={src} alt={`Imagen ${slotIndex + 1}`} data-testid="photo-upload-preview" />
+                        <button type="button" className="photo-upload-remove" onClick={() => removePhotoSlot(slotIndex)} data-testid="remove-photo-btn">✕</button>
+                      </div>
+                    ) : (
+                      <label className={`photo-slot-empty ${isUploading ? "is-uploading" : ""}`} htmlFor={`input-photo-${slotIndex}`}>
+                        <span className="photo-slot-plus">{isUploading ? "…" : "+"}</span>
+                        <span className="photo-slot-label">Imagen {slotIndex + 1}</span>
+                        <input
+                          id={`input-photo-${slotIndex}`}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handlePhotoSlotChange(slotIndex)}
+                          disabled={isUploading}
+                          data-testid={`input-photo-${slotIndex}`}
+                        />
+                      </label>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-            {inv.photo_urls.length < MAX_PHOTOS && (
-              <input
-                id="input-photo"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handlePhotoChange}
-                disabled={uploadingPhoto}
-                data-testid="input-photo"
-              />
-            )}
-            <p className="field-help">
-              {uploadingPhoto ? "Subiendo foto... 📸" : `Formatos: JPG, PNG, WEBP. Máximo ${MAX_PHOTO_MB}MB cada una.`}
-            </p>
+                );
+              })}
+            </div>
+            <p className="field-help">Formatos: JPG, PNG, WEBP. Máximo {MAX_PHOTO_MB}MB cada una.</p>
           </div>
 
           <div className="field">

@@ -1,21 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 /**
  * InvitationReveal — optional "surprise" cover shown before the invitation.
  *
- * A closed, wax-sealed envelope. Tapping anywhere (or activating the button
- * via keyboard) breaks the seal, the flap folds open, and the invitation
- * card rises up out of the envelope with a burst of sparkles — revealing the
- * guest's name for the first time as part of the payoff. Once the card has
- * settled, the whole cover fades away and `onOpen()` fires so the parent can
- * swap in the real invitation with no visual jump.
+ * A closed envelope, rendered with restraint (no confetti, no bounce) so it
+ * reads as premium stationery rather than a party trick. Tapping anywhere
+ * (or activating the button via keyboard) lets the seal fade, the flap swing
+ * open with a slow, weighted ease, and the invitation card rise smoothly out
+ * of the envelope — revealing the guest's name as the only payoff. Once the
+ * card has settled, the whole cover fades away and `onOpen()` fires so the
+ * parent can swap in the real invitation with no visual jump.
  *
  * Props:
  *   emoji        string   theme emoji for the wax seal (e.g. "🏅")          default "🎉"
  *   themeName    string   theme display name (e.g. "Sudor y Gloria")       default ""
  *   guestLabel   string   resolved name/event line, revealed on the card   default "Tu invitación"
- *   decorations  string[] ~6 emoji for ambient float + sparkle burst       default sparkles
+ *   decorations  string[] ~6 emoji, shown static/ambient (no motion)       default sparkles
  *   dark         boolean  dark theme treatment (button text, glow)        default false
  *   onOpen       func     called ONCE when the open sequence finishes     default noop
  *
@@ -24,7 +25,7 @@ import { motion, useReducedMotion } from "framer-motion";
  */
 
 const FALLBACK_DECOS = ["✨", "🎉", "💫", "🎊", "⭐", "🎈"];
-const SPARKLES = ["✨", "⭐", "💫"];
+const EASE = [0.22, 1, 0.36, 1]; // smooth, physical ease-out — no spring overshoot
 
 export const InvitationReveal = ({
   emoji = "🎉",
@@ -43,27 +44,11 @@ export const InvitationReveal = ({
 
   const decos = decorations && decorations.length ? decorations.slice(0, 6) : FALLBACK_DECOS;
 
-  const sparkles = useMemo(
-    () =>
-      Array.from({ length: 14 }, (_, i) => {
-        const angle = (i * 137.5 * Math.PI) / 180;
-        const dist = 70 + ((i * 47) % 120);
-        const glyph = i % 4 === 0 ? decos[i % decos.length] : SPARKLES[i % SPARKLES.length];
-        return {
-          glyph,
-          x: Math.cos(angle) * dist,
-          y: Math.sin(angle) * dist - 20,
-          delay: 0.5 + (i % 6) * 0.045,
-        };
-      }),
-    [decos]
-  );
-
   const open = () => {
     if (openedRef.current) return;
     openedRef.current = true;
     try {
-      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate([10, 30, 10]);
+      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(14);
     } catch {
       /* haptics are best-effort */
     }
@@ -76,9 +61,9 @@ export const InvitationReveal = ({
         ]
       : [
           [() => setStage("opening"), 20],
-          [() => setStage("risen"), 780],
-          [() => setStage("leaving"), 1750],
-          [onOpen, 2200],
+          [() => setStage("risen"), 900],
+          [() => setStage("leaving"), 1900],
+          [onOpen, 2300],
         ];
     t.forEach(([fn, ms]) => timers.current.push(setTimeout(fn, ms)));
   };
@@ -87,29 +72,29 @@ export const InvitationReveal = ({
     closed: { rotateX: 0, opacity: 1 },
     open: reduced
       ? { rotateX: 0, opacity: 0, transition: { duration: 0.2 } }
-      : { rotateX: -150, opacity: [1, 1, 0], transition: { duration: 0.55, ease: "easeIn", times: [0, 0.6, 1] } },
+      : { rotateX: -168, opacity: [1, 1, 0], transition: { duration: 0.85, ease: EASE, times: [0, 0.75, 1] } },
   };
 
   const sealV = {
-    closed: { scale: 1, opacity: 1, rotate: 0 },
+    closed: { scale: 1, opacity: 1 },
     open: reduced
       ? { opacity: 0, transition: { duration: 0.15 } }
-      : { scale: [1, 1.3, 0], rotate: [0, -10, 18], opacity: [1, 1, 0], transition: { duration: 0.4, ease: "easeOut" } },
+      : { scale: 0.85, opacity: 0, transition: { duration: 0.4, ease: EASE } },
   };
 
   const cardV = {
-    closed: { y: "34%", scale: 0.86, opacity: 0, rotate: 0 },
+    closed: { y: "34%", scale: 0.9, opacity: 0, rotate: 0 },
     opening: reduced ? { y: "34%", opacity: 0 } : { y: "34%", opacity: 0, transition: { duration: 0 } },
     risen: reduced
       ? { y: "-6%", scale: 1, opacity: 1, rotate: 0, transition: { duration: 0.35, delay: 0.15 } }
       : {
-          y: "-42%",
+          y: "-40%",
           scale: 1,
           opacity: 1,
-          rotate: -2.5,
-          transition: { delay: 0.42, type: "spring", stiffness: 170, damping: 16 },
+          rotate: -1.4,
+          transition: { delay: 0.5, duration: 0.9, ease: EASE },
         },
-    leaving: { scale: reduced ? 1 : 6, opacity: 0, rotate: 0, transition: { duration: 0.55, ease: "easeIn" } },
+    leaving: { scale: reduced ? 1 : 3.2, opacity: 0, rotate: 0, transition: { duration: 0.6, ease: "easeIn" } },
   };
 
   const stageWrapV = {
@@ -126,7 +111,6 @@ export const InvitationReveal = ({
     leaving: { opacity: 0 },
   };
 
-  const showSparkles = stage === "opening" && !reduced;
   const isOpen = stage !== "closed";
 
   return (
@@ -164,32 +148,14 @@ export const InvitationReveal = ({
             <motion.div className="reveal-env-seal" variants={sealV} animate={isOpen ? "open" : "closed"} aria-hidden="true">
               <span>{emoji}</span>
             </motion.div>
-
-            {showSparkles && (
-              <div className="reveal-sparkles" aria-hidden="true">
-                {sparkles.map((s, i) => (
-                  <motion.span
-                    key={i}
-                    className="reveal-sparkle"
-                    initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                    animate={{ x: s.x, y: s.y, scale: [0, 1.2, 0.8, 0], opacity: [0, 1, 1, 0] }}
-                    transition={{ duration: 1.1, delay: s.delay, ease: "easeOut" }}
-                  >
-                    {s.glyph}
-                  </motion.span>
-                ))}
-              </div>
-            )}
           </div>
         </motion.div>
 
         <motion.div className="reveal-btn-row" variants={textV} animate={stage === "closed" ? "closed" : "opening"}>
-          <div className="reveal-btn-bob">
-            <button type="button" className="reveal-btn" data-testid="reveal-open-btn">
-              Abrir invitación
-            </button>
-          </div>
-          <p className="reveal-hint">toca en cualquier parte para abrirla ✨</p>
+          <button type="button" className="reveal-btn" data-testid="reveal-open-btn">
+            Abrir invitación
+          </button>
+          <p className="reveal-hint">Toca para abrir tu invitación</p>
         </motion.div>
       </div>
     </motion.div>

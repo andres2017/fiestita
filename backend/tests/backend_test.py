@@ -112,6 +112,50 @@ class TestCreate:
         edited2 = requests.get(f"{API}/invitations/{d2['id']}/edit", params={"token": d2["edit_token"]})
         assert edited2.json()["reveal_effect"] is True
 
+    def test_create_rejects_invalid_song_url(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_CancionMala", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+            "song_url": "https://evil.com/track/123",
+        })
+        assert r.status_code == 400
+
+    def test_create_accepts_youtube_and_spotify_song_url(self):
+        for url in ["https://youtu.be/dQw4w9WgXcQ", "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                    "https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"]:
+            r = requests.post(f"{API}/invitations", json={
+                "theme": "espacio", "child_name": "TEST_Cancion", "age": 5,
+                "event_date": "2026-12-01", "event_time": "10:00", "song_url": url,
+            })
+            assert r.status_code == 200, f"{url}: {r.text}"
+
+    def test_create_rejects_more_than_max_photos(self):
+        fake_urls = [f"/uploads/photos/{'a' * 32}.jpg" for _ in range(4)]
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_MuchasFotos", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00", "photo_urls": fake_urls,
+        })
+        assert r.status_code == 400
+
+    def test_create_rejects_gift_registry_javascript_url(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_RegaloMalo", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+            "gift_registry_url": "javascript:alert(1)",
+        })
+        assert r.status_code == 400
+
+    def test_create_and_edit_roundtrips_itinerary(self):
+        items = [{"time": "11:00", "label": "Ceremonia", "emoji": "💍"}, {"time": "19:00", "label": "Fiesta", "emoji": "🎉"}]
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_Itinerario",
+            "event_date": "2026-12-01", "event_time": "10:00", "itinerary": items,
+        })
+        assert r.status_code == 200, r.text
+        d = r.json()
+        edited = requests.get(f"{API}/invitations/{d['id']}/edit", params={"token": d["edit_token"]})
+        assert edited.json()["itinerary"] == items
+
     def test_create_expanded_category_themes_accepted(self):
         for theme in ["cumbre", "cielito", "llama_viva", "tardeo", "gloria", "aguinaldos"]:
             r = requests.post(f"{API}/invitations", json={

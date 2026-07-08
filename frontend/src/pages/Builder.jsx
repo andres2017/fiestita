@@ -8,6 +8,8 @@ import { InvitationView } from "../components/InvitationView";
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
 const MAX_VIDEO_MB = 50;
+const MAX_PHOTO_MB = 8;
+const MAX_PHOTOS = 3;
 
 const EMPTY = {
   theme: "videojuegos",
@@ -28,6 +30,11 @@ const EMPTY = {
   host_names: "",
   video_url: "",
   reveal_effect: false,
+  photo_urls: [],
+  song_url: "",
+  gift_note: "",
+  gift_registry_url: "",
+  itinerary: [],
 };
 
 export default function Builder({ editMode = false }) {
@@ -111,6 +118,42 @@ export default function Builder({ editMode = false }) {
   };
 
   const removeVideo = () => setInv((prev) => ({ ...prev, video_url: "" }));
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (inv.photo_urls.length >= MAX_PHOTOS) {
+      toast.error(`Máximo ${MAX_PHOTOS} fotos.`);
+      return;
+    }
+    if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
+      toast.error(`Cada foto no puede pesar más de ${MAX_PHOTO_MB}MB.`);
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploadingPhoto(true);
+    try {
+      const r = await axios.post(`${API}/uploads/photo`, formData);
+      setInv((prev) => ({ ...prev, photo_urls: [...prev.photo_urls, r.data.photo_url] }));
+      toast.success("¡Foto subida! 📸");
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "No se pudo subir la foto. Inténtalo de nuevo.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+  const removePhoto = (url) => setInv((prev) => ({ ...prev, photo_urls: prev.photo_urls.filter((u) => u !== url) }));
+
+  const addItineraryItem = () => setInv((prev) => ({ ...prev, itinerary: [...prev.itinerary, { time: "", label: "", emoji: "" }] }));
+  const updateItineraryItem = (i, key) => (e) =>
+    setInv((prev) => ({
+      ...prev,
+      itinerary: prev.itinerary.map((it, idx) => (idx === i ? { ...it, [key]: e.target.value } : it)),
+    }));
+  const removeItineraryItem = (i) => setInv((prev) => ({ ...prev, itinerary: prev.itinerary.filter((_, idx) => idx !== i) }));
 
   const save = async (e) => {
     e.preventDefault();
@@ -351,6 +394,63 @@ export default function Builder({ editMode = false }) {
             <p className="field-help">
               {uploadingVideo ? "Subiendo video... 🎬" : "Formatos: MP4, WebM, MOV. Máximo 50MB."}
             </p>
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="input-photo">Fotos para tu invitación (opcional, máx. {MAX_PHOTOS})</label>
+            {inv.photo_urls.length > 0 && (
+              <div className="photo-upload-grid" data-testid="photo-upload-grid">
+                {inv.photo_urls.map((url) => (
+                  <div className="photo-upload-item" key={url}>
+                    <img src={`${BACKEND_BASE}${url}`} alt="" data-testid="photo-upload-preview" />
+                    <button type="button" className="photo-upload-remove" onClick={() => removePhoto(url)} data-testid="remove-photo-btn">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {inv.photo_urls.length < MAX_PHOTOS && (
+              <input
+                id="input-photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handlePhotoChange}
+                disabled={uploadingPhoto}
+                data-testid="input-photo"
+              />
+            )}
+            <p className="field-help">
+              {uploadingPhoto ? "Subiendo foto... 📸" : `Formatos: JPG, PNG, WEBP. Máximo ${MAX_PHOTO_MB}MB cada una.`}
+            </p>
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="input-song">Link de tu canción favorita (opcional)</label>
+            <input id="input-song" value={inv.song_url} onChange={set("song_url")} placeholder="https://open.spotify.com/track/... o https://youtu.be/..." data-testid="input-song" />
+            <p className="field-help">Pega un link de YouTube o Spotify y se reproducirá en tu invitación.</p>
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="input-gift-note">Sugerencia de regalos (opcional)</label>
+            <textarea id="input-gift-note" rows="2" value={inv.gift_note} onChange={set("gift_note")} placeholder="Tu presencia es nuestro mejor regalo, pero si quieres darnos algo más..." data-testid="input-gift-note" />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="input-gift-url">Link de mesa de regalos (opcional)</label>
+            <input id="input-gift-url" value={inv.gift_registry_url} onChange={set("gift_registry_url")} placeholder="https://..." data-testid="input-gift-url" />
+          </div>
+
+          <div className="field">
+            <label className="field-label">Itinerario del evento (opcional)</label>
+            {inv.itinerary.map((item, i) => (
+              <div className="itinerary-row" key={i} data-testid="itinerary-row">
+                <input type="time" value={item.time} onChange={updateItineraryItem(i, "time")} data-testid="itinerary-time" />
+                <input value={item.emoji} onChange={updateItineraryItem(i, "emoji")} placeholder="🥂" maxLength={4} className="itinerary-emoji" data-testid="itinerary-emoji" />
+                <input value={item.label} onChange={updateItineraryItem(i, "label")} placeholder="Brindis" className="itinerary-label" data-testid="itinerary-label" />
+                <button type="button" className="itinerary-remove" onClick={() => removeItineraryItem(i)} data-testid="itinerary-remove-btn">✕</button>
+              </div>
+            ))}
+            <button type="button" className="btn-outline itinerary-add-btn" onClick={addItineraryItem} data-testid="itinerary-add-btn">
+              ➕ Agregar momento
+            </button>
           </div>
 
           <div className="field-row">

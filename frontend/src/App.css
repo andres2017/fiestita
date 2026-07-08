@@ -203,6 +203,26 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .video-upload-preview { display: flex; flex-direction: column; gap: 0.6rem; }
 .video-upload-player { width: 100%; border-radius: 1rem; border: 2px solid #D1D5DB; background: #000; }
 
+.photo-upload-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.6rem; }
+.photo-upload-item { position: relative; width: 92px; height: 92px; }
+.photo-upload-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 0.85rem; border: 2px solid #D1D5DB; }
+.photo-upload-remove {
+  position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%;
+  background: #1F2937; color: #fff; border: 2px solid #fff; cursor: pointer; font-size: 0.7rem;
+  display: grid; place-items: center; padding: 0;
+}
+
+.itinerary-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; }
+.itinerary-row input[type="time"] { flex: 0 0 110px; }
+.itinerary-emoji { flex: 0 0 52px; text-align: center; }
+.itinerary-label { flex: 1 1 auto; }
+.itinerary-remove {
+  flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #D1D5DB;
+  background: #fff; cursor: pointer; color: #9CA3AF; font-size: 0.8rem;
+}
+.itinerary-remove:hover { color: #EF4444; border-color: #EF4444; }
+.itinerary-add-btn { padding: 0.55rem 1.1rem; font-size: 0.85rem; }
+
 .advanced { margin: 0.5rem 0 1.5rem; border: 2px dashed #D1D5DB; border-radius: 1rem; padding: 0.75rem 1rem; }
 .advanced summary { cursor: pointer; font-weight: 800; font-size: 0.9rem; color: #4B5563; }
 .advanced .field { margin-top: 1rem; }
@@ -499,3 +519,107 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 
 /* Preview inside builder: don't force full viewport height */
 .preview-frame .reveal-root { min-height: 560px; }
+
+/* ===== ELEGANT ADD-ON SECTIONS (song, gifts, itinerary, gallery — themed via CSS vars) ===== */
+/* Refined take on .inv-card: hairline border + soft diffuse shadow + airier padding,
+   still driven entirely by the theme's own palette so it flexes across all themes. */
+.inv-card.inv-card-elegant {
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--inv-primary) 35%, transparent);
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 44px -28px rgba(0, 0, 0, 0.35);
+  padding: 2rem 1.5rem 1.9rem;
+}
+
+/* Thin ornamental rule under section titles */
+.inv-elegant-divider { display: flex; align-items: center; gap: 0.7rem; margin: -0.6rem 0 1.4rem; color: var(--inv-primary); }
+.inv-elegant-divider::before,
+.inv-elegant-divider::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--inv-primary) 30%, transparent); }
+.inv-elegant-divider span { font-size: 0.6rem; line-height: 1; opacity: 0.8; }
+
+/* Centered, understated note text (gift note, etc.) */
+.inv-elegant-note {
+  margin: 0 auto; max-width: 38ch; text-align: center;
+  font-style: italic; font-weight: 600; font-size: 0.95rem; line-height: 1.85;
+  white-space: pre-line; opacity: 0.9;
+}
+
+/* Quiet pill button: hairline outline that fills with the theme primary on hover */
+.inv-btn-elegant {
+  display: inline-block; padding: 0.8rem 2rem; border-radius: 9999px;
+  border: 1px solid var(--inv-primary); color: var(--inv-primary); background: transparent;
+  font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.78rem;
+  letter-spacing: 2px; text-transform: uppercase; text-decoration: none; cursor: pointer;
+  transition: background-color 0.25s ease-out, color 0.25s ease-out, transform 0.25s ease-out;
+}
+.inv-btn-elegant:hover { background: var(--inv-primary); color: var(--inv-surface); transform: translateY(-2px); }
+.inv-dark .inv-btn-elegant:hover { color: var(--inv-bg); }
+.inv-btn-elegant:focus-visible { outline: 2px solid var(--inv-accent); outline-offset: 3px; }
+
+/* --- Song player --- */
+.inv-song-hint { margin: -0.6rem 0 1.25rem; text-align: center; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px; opacity: 0.65; }
+.inv-song-embed { border-radius: 12px; overflow: hidden; box-shadow: 0 16px 32px -22px rgba(0, 0, 0, 0.4); }
+.inv-song-embed iframe { display: block; width: 100%; border: 0; }
+.inv-song-embed-yt { aspect-ratio: 16 / 9; }
+.inv-song-embed-yt iframe { height: 100%; }
+.inv-song-embed-sp iframe { height: 152px; }
+
+/* --- Gift registry --- */
+.inv-gift-actions { margin-top: 1.4rem; text-align: center; }
+
+/* --- Itinerary timeline --- */
+.inv-itin { list-style: none; margin: 0.25rem 0 0; padding: 0; }
+.inv-itin-item { display: grid; grid-template-columns: 4.6rem 14px 1fr; column-gap: 0.85rem; }
+.inv-itin-time {
+  text-align: right; font-size: 0.78rem; font-weight: 800; letter-spacing: 1px;
+  color: var(--inv-primary); white-space: nowrap; font-variant-numeric: tabular-nums;
+  padding-top: 0.14rem; line-height: 1.5;
+}
+.inv-itin-rail { position: relative; }
+.inv-itin-rail::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--inv-primary) 28%, transparent);
+}
+.inv-itin-item:first-child .inv-itin-rail::before { top: 0.7rem; }
+.inv-itin-item:last-child .inv-itin-rail::before { bottom: calc(100% - 0.7rem); }
+.inv-itin-dot {
+  position: absolute; top: 0.7rem; left: 50%; transform: translate(-50%, -50%);
+  width: 9px; height: 9px; box-sizing: border-box; border-radius: 50%;
+  background: var(--inv-surface); border: 2px solid var(--inv-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--inv-soft) 55%, transparent);
+}
+.inv-itin-body { padding: 0 0 1.35rem; line-height: 1.5; min-width: 0; overflow-wrap: break-word; }
+.inv-itin-item:last-child .inv-itin-body { padding-bottom: 0.15rem; }
+.inv-itin-emoji { font-size: 1.05rem; line-height: 1; margin-right: 0.45rem; }
+.inv-itin-label { font-weight: 700; font-size: 0.95rem; }
+
+/* --- Photo gallery: framed prints on a soft mat --- */
+.inv-gallery { display: grid; gap: 1.1rem; }
+.inv-gallery-item { min-width: 0; }
+.inv-gallery-frame {
+  margin: 0; background: var(--inv-surface); padding: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--inv-primary) 22%, transparent);
+  border-radius: 0.55rem;
+  box-shadow: 0 18px 36px -22px rgba(0, 0, 0, 0.45);
+}
+.inv-gallery-frame img { display: block; width: 100%; height: auto; object-fit: cover; border-radius: 0.3rem; }
+
+/* 1 photo: centered portrait hero */
+.inv-gallery-1 { justify-items: center; }
+.inv-gallery-1 .inv-gallery-item { width: min(100%, 330px); }
+.inv-gallery-1 img { aspect-ratio: 4 / 5; }
+
+/* 2 photos: side-by-side pair, gently offset and counter-tilted */
+.inv-gallery-2 { grid-template-columns: 1fr 1fr; align-items: start; padding-bottom: 1rem; }
+.inv-gallery-2 .inv-gallery-item:first-child .inv-gallery-frame { transform: rotate(-1.4deg); }
+.inv-gallery-2 .inv-gallery-item:last-child .inv-gallery-frame { transform: rotate(1.4deg) translateY(1rem); }
+.inv-gallery-2 img { aspect-ratio: 3 / 4; }
+
+/* 3 photos: wide hero on top + tilted portrait pair below */
+.inv-gallery-3 { grid-template-columns: 1fr 1fr; }
+.inv-gallery-3 .inv-gallery-item:first-child { grid-column: 1 / -1; }
+.inv-gallery-3 .inv-gallery-item:first-child img { aspect-ratio: 16 / 10; }
+.inv-gallery-3 .inv-gallery-item:nth-child(2) .inv-gallery-frame { transform: rotate(-1.2deg); }
+.inv-gallery-3 .inv-gallery-item:nth-child(3) .inv-gallery-frame { transform: rotate(1.2deg); }
+.inv-gallery-3 .inv-gallery-item:nth-child(n + 2) img { aspect-ratio: 4 / 5; }

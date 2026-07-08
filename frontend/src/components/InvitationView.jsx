@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { THEMES, CATEGORY_FIELDS, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
 import { InvitationReveal } from "./InvitationReveal";
+import { InvitationSongPlayer } from "./InvitationSongPlayer";
+import { InvitationGiftCard } from "./InvitationGiftCard";
+import { InvitationItinerary } from "./InvitationItinerary";
+import { InvitationPhotoGallery } from "./InvitationPhotoGallery";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
@@ -126,6 +130,14 @@ export const InvitationView = ({ inv, preview = false }) => {
           </section>
         )}
 
+        {/* PHOTO GALLERY */}
+        {inv.photo_urls?.length > 0 && (
+          <InvitationPhotoGallery photos={inv.photo_urls.map((u) => `${BACKEND_BASE}${u}`)} />
+        )}
+
+        {/* SONG */}
+        {inv.song_url && <InvitationSongPlayer url={inv.song_url} />}
+
         {/* COUNTDOWN */}
         <section className="inv-card inv-countdown-card">
           <h2 className="inv-section-title">{copy.countdown}</h2>
@@ -165,6 +177,9 @@ export const InvitationView = ({ inv, preview = false }) => {
             📅 Agendar en mi calendario
           </a>
         </section>
+
+        {/* ITINERARY */}
+        {inv.itinerary?.length > 0 && <InvitationItinerary items={inv.itinerary} />}
 
         {/* HOW TO ARRIVE */}
         {(inv.how_arrive || inv.maps_url || inv.waze_url) && (
@@ -248,6 +263,11 @@ export const InvitationView = ({ inv, preview = false }) => {
             </a>
           )}
         </section>
+
+        {/* GIFT REGISTRY */}
+        {(inv.gift_note || inv.gift_registry_url) && (
+          <InvitationGiftCard note={inv.gift_note} registryUrl={inv.gift_registry_url} />
+        )}
 
         {!preview && (
           <section className="inv-card inv-promo" data-testid="inv-promo">

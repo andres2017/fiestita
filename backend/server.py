@@ -11,7 +11,7 @@ import hashlib
 import secrets
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
+from typing import Optional, List
 import uuid
 from datetime import datetime, timezone
 
@@ -66,6 +66,8 @@ PAYMENT_REFERENCE_PREFIX = "FIESTITA-"
 UPLOADS_DIR = ROOT_DIR / "uploads"
 VIDEOS_DIR = UPLOADS_DIR / "videos"
 VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+PHOTOS_DIR = UPLOADS_DIR / "photos"
+PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_VIDEO_BYTES = 50 * 1024 * 1024  # 50MB
 ALLOWED_VIDEO_TYPES = {
@@ -75,6 +77,19 @@ ALLOWED_VIDEO_TYPES = {
     "video/ogg": ".ogv",
 }
 VIDEO_URL_RE = re.compile(r"^/uploads/videos/[a-f0-9]{32}\.(mp4|webm|mov|ogv)$")
+
+MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8MB
+MAX_PHOTOS = 3
+ALLOWED_PHOTO_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
+PHOTO_URL_RE = re.compile(r"^/uploads/photos/[a-f0-9]{32}\.(jpg|png|webp)$")
+
+YOUTUBE_URL_RE = re.compile(r"^https://(www\.)?(youtube\.com/(watch\?v=|shorts/)|youtu\.be/)[\w-]+")
+SPOTIFY_URL_RE = re.compile(r"^https://open\.spotify\.com/(track|album|playlist)/[\w]+")
+MAX_ITINERARY_ITEMS = 20
 
 
 def _is_safe_link_url(url: str) -> bool:
@@ -93,6 +108,18 @@ def _is_valid_video_url(url: str) -> bool:
     """video_url must point at a file this server generated via /uploads/video, so it can't
     be used to smuggle an arbitrary external or javascript: URL into the <video> src."""
     return url == "" or bool(VIDEO_URL_RE.match(url))
+
+
+def _is_valid_photo_urls(urls: list) -> bool:
+    """Each photo_url must point at a file this server generated via /uploads/photo, and
+    there can be at most MAX_PHOTOS of them."""
+    return len(urls) <= MAX_PHOTOS and all(PHOTO_URL_RE.match(u) for u in urls)
+
+
+def _is_valid_song_url(url: str) -> bool:
+    """Only allow YouTube/Spotify links (the two the player embed knows how to render),
+    so this user-supplied URL can't be used to smuggle an arbitrary/javascript: URL."""
+    return url == "" or bool(YOUTUBE_URL_RE.match(url)) or bool(SPOTIFY_URL_RE.match(url))
 
 
 def _is_expired(event_date: str) -> bool:
@@ -116,6 +143,21 @@ def _validate_invitation_links(data: "InvitationData") -> None:
         raise HTTPException(status_code=400, detail="La URL de Google Apps Script debe ser de script.google.com y terminar en /exec")
     if not _is_valid_video_url(data.video_url):
         raise HTTPException(status_code=400, detail="Video inválido")
+    if not _is_valid_photo_urls(data.photo_urls):
+        raise HTTPException(status_code=400, detail=f"Puedes subir máximo {MAX_PHOTOS} fotos")
+    if not _is_valid_song_url(data.song_url):
+        raise HTTPException(status_code=400, detail="El link de la canción debe ser de YouTube o Spotify")
+    if not _is_safe_link_url(data.gift_registry_url):
+        raise HTTPException(status_code=400, detail="Link de mesa de regalos inválido")
+    if len(data.itinerary) > MAX_ITINERARY_ITEMS:
+        raise HTTPException(status_code=400, detail=f"Máximo {MAX_ITINERARY_ITEMS} momentos en el itinerario")
+
+
+class ItineraryItem(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    time: str = ""
+    label: str = ""
+    emoji: str = ""
 
 
 class InvitationData(BaseModel):
@@ -138,6 +180,11 @@ class InvitationData(BaseModel):
     host_names: str = ""
     video_url: str = ""
     reveal_effect: bool = False
+    photo_urls: List[str] = Field(default_factory=list)
+    song_url: str = ""
+    gift_note: str = ""
+    gift_registry_url: str = ""
+    itinerary: List[ItineraryItem] = Field(default_factory=list)
 
 
 class Invitation(InvitationData):
@@ -254,6 +301,27 @@ async def upload_video(request: Request, file: UploadFile = File(...)):
         f.write(contents)
 
     return {"video_url": f"/uploads/videos/{filename}"}
+
+
+@api_router.post("/uploads/photo")
+async def upload_photo(request: Request, file: UploadFile = File(...)):
+    ext = ALLOWED_PHOTO_TYPES.get(file.content_type)
+    if not ext:
+        raise HTTPException(status_code=400, detail="Formato de foto no soportado. Usa JPG, PNG o WEBP.")
+
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_PHOTO_BYTES + 1_000_000:
+        raise HTTPException(status_code=413, detail="La foto no puede pesar más de 8MB.")
+
+    contents = await file.read(MAX_PHOTO_BYTES + 1)
+    if len(contents) > MAX_PHOTO_BYTES:
+        raise HTTPException(status_code=413, detail="La foto no puede pesar más de 8MB.")
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    with open(PHOTOS_DIR / filename, "wb") as f:
+        f.write(contents)
+
+    return {"photo_url": f"/uploads/photos/{filename}"}
 
 
 @api_router.get("/invitations/{inv_id}/rsvps")

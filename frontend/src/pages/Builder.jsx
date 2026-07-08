@@ -35,7 +35,15 @@ const EMPTY = {
   gift_note: "",
   gift_registry_url: "",
   itinerary: [],
+  audience: "todos",
+  ask_phone: true,
 };
+
+const AUDIENCE_OPTIONS = [
+  { value: "ninos", label: "🧒 Solo niños" },
+  { value: "todos", label: "👨‍👩‍👧 Niños y adultos" },
+  { value: "adultos", label: "🥂 Solo adultos" },
+];
 
 export default function Builder({ editMode = false }) {
   const { id, token } = useParams();
@@ -452,6 +460,35 @@ export default function Builder({ editMode = false }) {
               ➕ Agregar momento
             </button>
           </div>
+
+          <div className="field">
+            <label className="field-label">¿Para quién es la celebración?</label>
+            <div className="audience-picker" data-testid="audience-picker">
+              {AUDIENCE_OPTIONS.map((opt) => (
+                <button type="button" key={opt.value}
+                  className={`audience-chip ${inv.audience === opt.value ? "active" : ""}`}
+                  onClick={() => setInv({ ...inv, audience: opt.value })}
+                  data-testid={`audience-chip-${opt.value}`}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="field-help">Así los invitados saben si es para niños, adultos, o toda la familia.</p>
+          </div>
+
+          <label className="reveal-toggle" htmlFor="input-ask-phone">
+            <input
+              id="input-ask-phone"
+              type="checkbox"
+              checked={inv.ask_phone}
+              onChange={(e) => setInv({ ...inv, ask_phone: e.target.checked })}
+              data-testid="input-ask-phone"
+            />
+            <span>
+              📱 Pedir celular al confirmar asistencia
+              <small>Si lo desactivas, los invitados solo confirman con su nombre, sin dejar su número.</small>
+            </span>
+          </label>
 
           <div className="field-row">
             <div className="field">

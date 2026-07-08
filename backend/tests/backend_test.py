@@ -156,6 +156,52 @@ class TestCreate:
         edited = requests.get(f"{API}/invitations/{d['id']}/edit", params={"token": d["edit_token"]})
         assert edited.json()["itinerary"] == items
 
+    def test_create_audience_defaults_todos_and_is_settable(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_AudienciaDefault", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+        })
+        assert r.status_code == 200, r.text
+        d = r.json()
+        edited = requests.get(f"{API}/invitations/{d['id']}/edit", params={"token": d["edit_token"]})
+        assert edited.json()["audience"] == "todos"
+
+        for value in ["ninos", "adultos"]:
+            r2 = requests.post(f"{API}/invitations", json={
+                "theme": "espacio", "child_name": "TEST_Audiencia", "age": 5,
+                "event_date": "2026-12-01", "event_time": "10:00", "audience": value,
+            })
+            assert r2.status_code == 200, f"{value}: {r2.text}"
+            d2 = r2.json()
+            edited2 = requests.get(f"{API}/invitations/{d2['id']}/edit", params={"token": d2["edit_token"]})
+            assert edited2.json()["audience"] == value
+
+    def test_create_rejects_invalid_audience(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_AudienciaMala", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00", "audience": "mascotas",
+        })
+        assert r.status_code == 400
+
+    def test_create_ask_phone_defaults_true_and_is_settable(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_AskPhoneDefault", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+        })
+        assert r.status_code == 200, r.text
+        d = r.json()
+        edited = requests.get(f"{API}/invitations/{d['id']}/edit", params={"token": d["edit_token"]})
+        assert edited.json()["ask_phone"] is True
+
+        r2 = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_AskPhoneOff", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00", "ask_phone": False,
+        })
+        assert r2.status_code == 200, r2.text
+        d2 = r2.json()
+        edited2 = requests.get(f"{API}/invitations/{d2['id']}/edit", params={"token": d2["edit_token"]})
+        assert edited2.json()["ask_phone"] is False
+
     def test_create_expanded_category_themes_accepted(self):
         for theme in ["cumbre", "cielito", "llama_viva", "tardeo", "gloria", "aguinaldos"]:
             r = requests.post(f"{API}/invitations", json={

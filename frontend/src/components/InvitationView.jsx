@@ -82,6 +82,9 @@ export const InvitationView = ({ inv, preview = false }) => {
   const name = inv.child_name || CATEGORY_FIELDS[theme.category]?.fallbackName || "Tu invitado";
   const age = inv.age || "?";
   const dispInv = { ...inv, child_name: name, age };
+  const showKidsCount = inv.audience !== "adultos";
+  const showAdultsCount = inv.audience !== "ninos";
+  const showPhoneField = inv.ask_phone !== false;
 
   if (!opened) {
     const RevealComponent = ELEGANT_REVEAL_CATEGORIES.has(theme.category) ? InvitationRevealElegant : InvitationReveal;
@@ -209,6 +212,11 @@ export const InvitationView = ({ inv, preview = false }) => {
         <section className="inv-card" id="rsvp">
           <h2 className="inv-section-title">{copy.rsvpTitle}</h2>
           <p className="inv-rsvp-subtitle">{copy.rsvpSubtitle}</p>
+          {inv.audience !== "todos" && (
+            <p className="inv-audience-note" data-testid="inv-audience-note">
+              {inv.audience === "adultos" ? "🥂 Este evento es solo para adultos" : "🧒 Este evento es para niños"}
+            </p>
+          )}
 
           {sent ? (
             <div className="inv-success" data-testid="rsvp-success">
@@ -222,8 +230,10 @@ export const InvitationView = ({ inv, preview = false }) => {
             <form onSubmit={submitRsvp} className="inv-form">
               <input required className="inv-input" placeholder="Tu nombre completo" value={form.nombre}
                 onChange={(e) => setForm({ ...form, nombre: e.target.value })} data-testid="rsvp-name-input" />
-              <input className="inv-input" placeholder="Celular / WhatsApp" value={form.telefono}
-                onChange={(e) => setForm({ ...form, telefono: e.target.value })} data-testid="rsvp-phone-input" />
+              {showPhoneField && (
+                <input className="inv-input" placeholder="Celular / WhatsApp" value={form.telefono}
+                  onChange={(e) => setForm({ ...form, telefono: e.target.value })} data-testid="rsvp-phone-input" />
+              )}
               <label className="inv-label">¿Nos acompañas?</label>
               <div className="inv-attend-btns">
                 {["✅ ¡Sí, voy!", "❌ No podré"].map((opt) => (
@@ -235,17 +245,21 @@ export const InvitationView = ({ inv, preview = false }) => {
                   </button>
                 ))}
               </div>
-              <div className="inv-counts">
-                <div>
-                  <label className="inv-label" htmlFor="rsvp-adults-input">Adultos</label>
-                  <input id="rsvp-adults-input" type="number" min="0" className="inv-input" value={form.adultos}
-                    onChange={(e) => setForm({ ...form, adultos: e.target.value })} data-testid="rsvp-adults-input" />
-                </div>
-                <div>
-                  <label className="inv-label" htmlFor="rsvp-kids-input">Niños</label>
-                  <input id="rsvp-kids-input" type="number" min="0" className="inv-input" value={form.ninos}
-                    onChange={(e) => setForm({ ...form, ninos: e.target.value })} data-testid="rsvp-kids-input" />
-                </div>
+              <div className={`inv-counts ${showKidsCount && showAdultsCount ? "" : "inv-counts-single"}`}>
+                {showAdultsCount && (
+                  <div>
+                    <label className="inv-label" htmlFor="rsvp-adults-input">Adultos</label>
+                    <input id="rsvp-adults-input" type="number" min="0" className="inv-input" value={form.adultos}
+                      onChange={(e) => setForm({ ...form, adultos: e.target.value })} data-testid="rsvp-adults-input" />
+                  </div>
+                )}
+                {showKidsCount && (
+                  <div>
+                    <label className="inv-label" htmlFor="rsvp-kids-input">Niños</label>
+                    <input id="rsvp-kids-input" type="number" min="0" className="inv-input" value={form.ninos}
+                      onChange={(e) => setForm({ ...form, ninos: e.target.value })} data-testid="rsvp-kids-input" />
+                  </div>
+                )}
               </div>
               <textarea className="inv-input" rows="3" placeholder={copy.msgLabel(dispInv)} value={form.mensaje}
                 onChange={(e) => setForm({ ...form, mensaje: e.target.value })} data-testid="rsvp-message-input" />

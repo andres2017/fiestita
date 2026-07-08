@@ -90,6 +90,7 @@ PHOTO_URL_RE = re.compile(r"^/uploads/photos/[a-f0-9]{32}\.(jpg|png|webp)$")
 YOUTUBE_URL_RE = re.compile(r"^https://(www\.)?(youtube\.com/(watch\?v=|shorts/)|youtu\.be/)[\w-]+")
 SPOTIFY_URL_RE = re.compile(r"^https://open\.spotify\.com/(track|album|playlist)/[\w]+")
 MAX_ITINERARY_ITEMS = 20
+VALID_AUDIENCES = {"ninos", "todos", "adultos"}
 
 
 def _is_safe_link_url(url: str) -> bool:
@@ -151,6 +152,8 @@ def _validate_invitation_links(data: "InvitationData") -> None:
         raise HTTPException(status_code=400, detail="Link de mesa de regalos inválido")
     if len(data.itinerary) > MAX_ITINERARY_ITEMS:
         raise HTTPException(status_code=400, detail=f"Máximo {MAX_ITINERARY_ITEMS} momentos en el itinerario")
+    if data.audience not in VALID_AUDIENCES:
+        raise HTTPException(status_code=400, detail="Valor de audiencia inválido")
 
 
 class ItineraryItem(BaseModel):
@@ -185,6 +188,8 @@ class InvitationData(BaseModel):
     gift_note: str = ""
     gift_registry_url: str = ""
     itinerary: List[ItineraryItem] = Field(default_factory=list)
+    audience: str = "todos"  # "ninos" | "todos" | "adultos" — who the event is for
+    ask_phone: bool = True  # whether the guest RSVP form collects a phone/WhatsApp number
 
 
 class Invitation(InvitationData):

@@ -14,8 +14,14 @@ export const CATEGORIES = [
 // Per-category field labels/placeholders and fallback display name, shared by
 // Builder.jsx (creation form) and AdminVentas.jsx (manual creation form).
 export const CATEGORY_FIELDS = {
-  cumple_infantil: { nameLabel: "Nombre del peque *", namePlaceholder: "Gabriel", fallbackName: "Tu peque", showAge: true, ageLabel: "Edad que cumple *", showFullName: true, showSubtitle: false },
-  cumple_adulto: { nameLabel: "Nombre del festejado *", namePlaceholder: "Andrea", fallbackName: "El festejado", showAge: true, ageLabel: "Edad que cumple *", showFullName: true, showSubtitle: false },
+  cumple_infantil: {
+    nameLabel: "Nombre del peque *", namePlaceholder: "Gabriel", fallbackName: "Tu peque", showAge: true, ageLabel: "Edad que cumple *", showFullName: true, showSubtitle: true,
+    subtitleLabel: "Temática o nota especial (opcional)", subtitlePlaceholder: "Ej: Temática Mario Bros · o código de vestimenta",
+  },
+  cumple_adulto: {
+    nameLabel: "Nombre del festejado *", namePlaceholder: "Andrea", fallbackName: "El festejado", showAge: true, ageLabel: "Edad que cumple *", showFullName: true, showSubtitle: true,
+    subtitleLabel: "Temática o nota especial (opcional)", subtitlePlaceholder: "Ej: Código de vestimenta: elegante casual",
+  },
   boda: {
     nameLabel: "Nombres de los novios *", namePlaceholder: "Juan & María", fallbackName: "Los novios", showAge: false, showSubtitle: true,
     subtitleLabel: "Detalle especial (opcional)", subtitlePlaceholder: "Ceremonia religiosa seguida de recepción",
@@ -66,7 +72,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `${(inv.child_name || "").toUpperCase()}MUNDO`,
       title: (inv) => `¡${inv.child_name} sube al nivel ${inv.age}!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "⏳ La aventura comienza en",
       details: "▼ Datos de la misión ▼",
       arrive: "🧭 Cómo llegar",
@@ -93,7 +99,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Reino de ${inv.child_name}`,
       title: (inv) => `¡La princesa ${inv.child_name} cumple ${inv.age}!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "⏳ El baile real comienza en",
       details: "✨ Detalles de la celebración real ✨",
       arrive: "🏰 Cómo llegar al castillo",
@@ -120,7 +126,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Escuadrón ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age} y salva el día!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "⏳ La misión heroica comienza en",
       details: "💥 Datos de la operación 💥",
       arrive: "🗺️ Cómo llegar al cuartel",
@@ -147,7 +153,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Dinolandia de ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age} dino-años!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "⏳ La expedición comienza en",
       details: "🦴 Datos de la expedición 🦴",
       arrive: "🗺️ Cómo llegar al valle jurásico",
@@ -174,7 +180,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Misión ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} despega al año ${inv.age}!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "⏳ El despegue es en",
       details: "🛰️ Datos de la misión espacial 🛰️",
       arrive: "🧭 Coordenadas de la base",
@@ -201,7 +207,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Mundo mágico de ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age} añitos mágicos!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "⏳ La magia comienza en",
       details: "🌈 Detalles de la fiesta mágica 🌈",
       arrive: "🗺️ Cómo llegar al arcoíris",
@@ -228,7 +234,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Función mágica de ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age} años de magia!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "🪄 El gran truco comienza en",
       details: "🔮 Detalles del espectáculo 🔮",
       arrive: "🎩 Cómo llegar al teatro mágico",
@@ -255,7 +261,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Gran Carpa de ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age} bajo la carpa!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "🎪 La función empieza en",
       details: "🎟️ Detalles de la función 🎟️",
       arrive: "🗺️ Cómo llegar a la carpa",
@@ -282,7 +288,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Tripulación de ${inv.child_name}`,
       title: (inv) => `¡Capitán ${inv.child_name} cumple ${inv.age} años!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "⚓ Zarpamos en",
       details: "🗺️ Datos del tesoro 🗺️",
       arrive: "🧭 Cómo llegar al puerto",
@@ -309,7 +315,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Reino submarino de ${inv.child_name}`,
       title: (inv) => `¡La sirena ${inv.child_name} cumple ${inv.age} años!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "🫧 La aventura submarina empieza en",
       details: "🐚 Detalles del arrecife 🐚",
       arrive: "🌊 Cómo llegar al océano",
@@ -336,7 +342,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Safari de ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age} años en la sabana!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "🐾 La expedición safari sale en",
       details: "🌍 Datos de la expedición 🌍",
       arrive: "🗺️ Cómo llegar al safari",
@@ -363,7 +369,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Granja de ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age} añitos en la granja!`,
-      subtitle: (inv) => `CUMPLE ${inv.age} AÑITOS 🎂`,
+      subtitle: (inv) => inv.event_subtitle || `CUMPLE ${inv.age} AÑITOS 🎂`,
       countdown: "🚜 El paseo por la granja empieza en",
       details: "🌾 Detalles del corral 🌾",
       arrive: "🗺️ Cómo llegar a la granja",
@@ -390,7 +396,7 @@ export const THEMES = {
     copy: {
       badge: (inv) => `Fiesta de ${inv.child_name}`,
       title: (inv) => `¡${inv.child_name} cumple ${inv.age}!`,
-      subtitle: () => `UNA NOCHE PARA CELEBRAR 🥂`,
+      subtitle: (inv) => inv.event_subtitle || `UNA NOCHE PARA CELEBRAR 🥂`,
       countdown: "🕰️ La fiesta comienza en",
       details: "🍾 Detalles del evento 🍾",
       arrive: "🗺️ Cómo llegar",

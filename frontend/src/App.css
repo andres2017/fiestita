@@ -179,6 +179,15 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .category-chip.active { background: var(--l-secondary); color: #fff; box-shadow: 3px 3px 0 rgba(31,41,55,0.8); }
 .category-chip:disabled { opacity: 0.35; cursor: not-allowed; }
 .category-chip:disabled:hover { transform: none; }
+
+.audience-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0.4rem; }
+.audience-chip {
+  border: 2px solid #1F2937; background: #fff; border-radius: 9999px; padding: 0.5rem 1rem;
+  font-weight: 800; cursor: pointer; font-size: 0.9rem; font-family: 'Fredoka', sans-serif;
+  transition: transform 0.15s ease-out, background-color 0.15s ease-out;
+}
+.audience-chip:hover { transform: translateY(-2px); }
+.audience-chip.active { background: var(--l-secondary); color: #fff; box-shadow: 3px 3px 0 rgba(31,41,55,0.8); }
 .category-locked-note { margin: -0.75rem 0 1.25rem; }
 
 .theme-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 1.25rem; }
@@ -349,6 +358,10 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-map-btns { display: flex; flex-direction: column; }
 
 .inv-rsvp-subtitle { text-align: center; font-weight: 700; opacity: 0.85; margin: -0.5rem 0 1.25rem; font-size: 0.9rem; }
+.inv-audience-note {
+  text-align: center; font-weight: 800; font-size: 0.8rem; margin: -0.75rem 0 1.25rem;
+  color: var(--inv-primary);
+}
 .inv-form { display: flex; flex-direction: column; gap: 0.8rem; }
 .inv-input {
   width: 100%; box-sizing: border-box; border: 2px solid var(--inv-primary); border-radius: 1rem;
@@ -367,6 +380,7 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-attend-btn.active { background: var(--inv-primary); color: var(--inv-surface); }
 .inv-dark .inv-attend-btn.active { color: #0B1020; }
 .inv-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+.inv-counts.inv-counts-single { grid-template-columns: 1fr; max-width: 50%; }
 .inv-counts .inv-label { display: block; margin-bottom: 0.3rem; }
 .inv-error { color: var(--inv-accent); font-weight: 700; font-size: 0.85rem; text-align: center; margin: 0; }
 

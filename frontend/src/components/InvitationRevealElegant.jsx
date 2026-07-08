@@ -1,0 +1,232 @@
+import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+
+/**
+ * InvitationRevealElegant — "romper el sello" cover for adult/formal events
+ * (weddings, adult birthdays). Alternate to InvitationReveal (the envelope),
+ * which keeps serving every other category untouched.
+ *
+ * Concept: the whole cover is one object — a wax seal hanging from a silk
+ * thread, stamped with the celebrant's monogram initial. The guest doesn't
+ * watch an envelope open; they BREAK THE SEAL, the gesture formal
+ * correspondence has always been opened with. On tap the seal compresses
+ * under the finger, cracks along an irregular seam, the two wax halves drift
+ * apart and dissolve, the thread releases, and in the seal's exact place the
+ * guest line materializes out of focus — crowned by the theme name in small
+ * caps and underlined by the house ornamental divider (hairline ✦ hairline)
+ * drawing itself outward. Then the cover fades and onOpen() fires.
+ *
+ * Restraint is deliberate: no confetti, no bounce/spring, no idle motion.
+ * Every color comes from the theme's --inv-* custom properties so it works
+ * across all adult palettes (tan/gold wedding, wine/gold confirmation,
+ * black/gold night party), light or dark.
+ *
+ * Props (identical contract to InvitationReveal so the parent swaps 1:1):
+ *   emoji        string   fallback die mark when no monogram letter   default "🥂"
+ *   themeName    string   small-caps line above the revealed name     default ""
+ *   guestLabel   string   revealed line; its first letter is the die  default "Tu invitación"
+ *   decorations  string[] accepted for contract parity but NOT rendered —
+ *                         an emoji scatter would undercut the formal look
+ *   dark         boolean  dark theme treatment (glow, contrast tweaks) default false
+ *   onOpen       func     called ONCE when the open sequence resolves  default noop
+ *
+ * Must render inside an element that defines the --inv-* CSS custom props
+ * (same styleVars wrapper used by InvitationView).
+ */
+
+const EASE = [0.22, 1, 0.36, 1]; // weighted ease-out — no spring, no overshoot
+
+/** First real letter of the label (any alphabet), uppercased — the seal die. */
+const monogramOf = (label) => {
+  const m = String(label || "").trim().match(/\p{L}/u);
+  return m ? m[0].toUpperCase() : null;
+};
+
+/**
+ * One full seal face (rim + wax + engraved ring + die). Rendered three times
+ * — an intact copy on top, and two pre-cracked halves hidden beneath it — so
+ * the closed seal is seamless and the crack simply "appears" when the intact
+ * copy vanishes.
+ */
+const SealFace = ({ monogram, emoji }) => (
+  <span className="reveal-elegant-face" aria-hidden="true">
+    <span className="reveal-elegant-wax-rim" />
+    <span className="reveal-elegant-wax">
+      <span className="reveal-elegant-wax-ring" />
+      <span className={`reveal-elegant-die${monogram ? "" : " reveal-elegant-die-emoji"}`}>
+        {monogram || emoji}
+      </span>
+    </span>
+  </span>
+);
+
+export const InvitationRevealElegant = ({
+  emoji = "🥂",
+  themeName = "",
+  guestLabel = "Tu invitación",
+  dark = false,
+  onOpen = () => {},
+}) => {
+  const [stage, setStage] = useState("sealed"); // sealed -> cracking -> revealed -> leaving
+  const openedRef = useRef(false);
+  const timers = useRef([]);
+  const reduced = useReducedMotion();
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  const monogram = monogramOf(guestLabel);
+
+  const open = () => {
+    if (openedRef.current) return;
+    openedRef.current = true;
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(12);
+    } catch {
+      /* haptics are best-effort */
+    }
+    const seq = reduced
+      ? [
+          [() => setStage("cracking"), 20],
+          [() => setStage("revealed"), 260],
+          [() => setStage("leaving"), 1550],
+          [onOpen, 1950],
+        ]
+      : [
+          [() => setStage("cracking"), 20],
+          [() => setStage("revealed"), 780],
+          [() => setStage("leaving"), 2650],
+          [onOpen, 3200],
+        ];
+    seq.forEach(([fn, ms]) => timers.current.push(setTimeout(fn, ms)));
+  };
+
+  /* --- seal break --- */
+  const intactV = {
+    sealed: { opacity: 1 },
+    cracking: { opacity: 0, transition: { duration: reduced ? 0.25 : 0.1, ease: "easeOut" } },
+  };
+  const halfLV = {
+    sealed: { x: 0, y: 0, rotate: 0, opacity: 1 },
+    cracking: reduced
+      ? { opacity: 0, transition: { duration: 0.25 } }
+      : {
+          x: -36, y: 26, rotate: -7, opacity: [1, 1, 0],
+          transition: { delay: 0.08, duration: 0.9, ease: EASE, times: [0, 0.55, 1] },
+        },
+  };
+  const halfRV = {
+    sealed: { x: 0, y: 0, rotate: 0, opacity: 1 },
+    cracking: reduced
+      ? { opacity: 0, transition: { duration: 0.25 } }
+      : {
+          x: 38, y: 31, rotate: 8.5, opacity: [1, 1, 0],
+          transition: { delay: 0.08, duration: 0.9, ease: EASE, times: [0, 0.55, 1] },
+        },
+  };
+  const ringV = {
+    sealed: { opacity: 0, scale: 0.85 },
+    cracking: reduced
+      ? { opacity: 0 }
+      : { opacity: [0, 0.5, 0], scale: 1.5, transition: { duration: 0.85, ease: EASE, times: [0, 0.22, 1] } },
+  };
+  const ribbonV = {
+    sealed: { scaleY: 1, opacity: 1 },
+    cracking: reduced
+      ? { opacity: 0, transition: { duration: 0.3 } }
+      : { scaleY: 0, opacity: 0, transition: { delay: 0.12, duration: 0.55, ease: EASE } },
+  };
+  const introV = {
+    sealed: { opacity: 1, y: 0 },
+    cracking: { opacity: 0, y: 6, transition: { duration: 0.3, ease: "easeOut" } },
+  };
+
+  /* --- payoff (materializes where the seal was) --- */
+  const payKickerV = {
+    hidden: { opacity: 0, y: 8 },
+    in: { opacity: 1, y: 0, transition: { duration: reduced ? 0.3 : 0.55, ease: EASE } },
+  };
+  const payNameV = reduced
+    ? { hidden: { opacity: 0 }, in: { opacity: 1, transition: { duration: 0.35 } } }
+    : {
+        hidden: { opacity: 0, y: 14, scale: 0.985, filter: "blur(7px)" },
+        in: {
+          opacity: 1, y: 0, scale: 1, filter: "blur(0px)",
+          transition: { delay: 0.08, duration: 0.8, ease: EASE },
+        },
+      };
+  const payLineV = reduced
+    ? { hidden: { opacity: 0 }, in: { opacity: 1, transition: { delay: 0.1, duration: 0.35 } } }
+    : { hidden: { scaleX: 0 }, in: { scaleX: 1, transition: { delay: 0.5, duration: 0.65, ease: EASE } } };
+  const payStarV = {
+    hidden: { opacity: 0 },
+    in: { opacity: 0.85, transition: { delay: reduced ? 0.1 : 0.45, duration: 0.4 } },
+  };
+
+  const crackAnim = stage === "sealed" ? "sealed" : "cracking";
+  const payAnim = stage === "revealed" || stage === "leaving" ? "in" : "hidden";
+  const canTap = stage === "sealed";
+
+  return (
+    <motion.div
+      className={`reveal-elegant-root ${dark ? "reveal-elegant-dark" : "reveal-elegant-light"}${canTap ? "" : " reveal-elegant-opened"}`}
+      data-testid="reveal-elegant-root"
+      onClick={open}
+      animate={stage === "leaving" ? { opacity: 0 } : { opacity: 1 }}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+    >
+      <div className="reveal-elegant-stage">
+        <motion.div className="reveal-elegant-ribbon" variants={ribbonV} animate={crackAnim} aria-hidden="true" />
+
+        <div className="reveal-elegant-center">
+          <motion.button
+            type="button"
+            className="reveal-elegant-seal"
+            data-testid="reveal-elegant-open-btn"
+            aria-label="Abrir invitación"
+            aria-disabled={!canTap}
+            onClick={open}
+            whileHover={canTap && !reduced ? { scale: 1.02 } : undefined}
+            whileTap={canTap && !reduced ? { scale: 0.955 } : undefined}
+            transition={{ type: "tween", duration: 0.18, ease: "easeOut" }}
+          >
+            <motion.span className="reveal-elegant-half reveal-elegant-half-l" variants={halfLV} animate={crackAnim}>
+              <SealFace monogram={monogram} emoji={emoji} />
+            </motion.span>
+            <motion.span className="reveal-elegant-half reveal-elegant-half-r" variants={halfRV} animate={crackAnim}>
+              <SealFace monogram={monogram} emoji={emoji} />
+            </motion.span>
+            <motion.span className="reveal-elegant-intact" variants={intactV} animate={crackAnim}>
+              <SealFace monogram={monogram} emoji={emoji} />
+            </motion.span>
+            <motion.span className="reveal-elegant-ringpulse" variants={ringV} animate={crackAnim} aria-hidden="true" />
+          </motion.button>
+
+          <div className="reveal-elegant-payoff" aria-hidden={payAnim === "hidden"}>
+            {themeName ? (
+              <motion.p className="reveal-elegant-payoff-kicker" variants={payKickerV} animate={payAnim}>
+                {themeName}
+              </motion.p>
+            ) : null}
+            <motion.p className="reveal-elegant-name" data-testid="reveal-elegant-name" variants={payNameV} animate={payAnim}>
+              {guestLabel}
+            </motion.p>
+            <div className="reveal-elegant-payoff-divider">
+              <motion.span className="reveal-elegant-payoff-line reveal-elegant-payoff-line-l" variants={payLineV} animate={payAnim} />
+              <motion.span className="reveal-elegant-payoff-star" variants={payStarV} animate={payAnim} aria-hidden="true">✦</motion.span>
+              <motion.span className="reveal-elegant-payoff-line reveal-elegant-payoff-line-r" variants={payLineV} animate={payAnim} />
+            </div>
+          </div>
+        </div>
+
+        <motion.div className="reveal-elegant-intro" variants={introV} animate={crackAnim}>
+          <p className="reveal-elegant-kicker">Una invitación para ti</p>
+          <p className="reveal-elegant-hint">Toca el sello para abrirla</p>
+        </motion.div>
+
+        <div className="reveal-elegant-spacer" aria-hidden="true" />
+      </div>
+    </motion.div>
+  );
+};
+
+export default InvitationRevealElegant;

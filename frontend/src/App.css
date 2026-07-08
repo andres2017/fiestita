@@ -548,12 +548,35 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-btn-elegant:focus-visible { outline: 2px solid var(--inv-accent); outline-offset: 3px; }
 
 /* --- Song player --- */
-.inv-song-hint { margin: -0.6rem 0 1.25rem; text-align: center; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px; opacity: 0.65; }
-.inv-song-embed { border-radius: 12px; overflow: hidden; box-shadow: 0 16px 32px -22px rgba(0, 0, 0, 0.4); }
-.inv-song-embed iframe { display: block; width: 100%; border: 0; }
-.inv-song-embed-yt { aspect-ratio: 16 / 9; }
-.inv-song-embed-yt iframe { height: 100%; }
-.inv-song-embed-sp iframe { height: 152px; }
+.inv-song-playbtn {
+  display: grid; place-items: center; width: 4.5rem; height: 4.5rem; margin: 0.25rem auto 1.1rem;
+  border-radius: 50%; border: 1px solid var(--inv-primary); background: var(--inv-primary);
+  color: var(--inv-surface); cursor: pointer; box-shadow: 0 14px 28px -16px color-mix(in srgb, var(--inv-primary) 70%, transparent);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.inv-song-playbtn:hover:not(:disabled) { transform: scale(1.05); }
+.inv-song-playbtn:focus-visible { outline: 2px solid var(--inv-accent); outline-offset: 3px; }
+.inv-song-playbtn:disabled { opacity: 0.45; cursor: wait; }
+.inv-song-playbtn-icon { display: grid; place-items: center; }
+
+.inv-song-bars { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 22px; margin-bottom: 0.9rem; }
+.inv-song-bars span {
+  display: block; width: 3px; height: 6px; border-radius: 2px;
+  background: color-mix(in srgb, var(--inv-primary) 65%, transparent);
+  transition: height 0.2s ease-out;
+}
+.inv-song-bars.is-playing span { animation: inv-song-bar-bounce 1s ease-in-out infinite; }
+.inv-song-bars.is-playing span:nth-child(1) { animation-delay: -0.9s; }
+.inv-song-bars.is-playing span:nth-child(2) { animation-delay: -0.6s; }
+.inv-song-bars.is-playing span:nth-child(3) { animation-delay: -0.3s; }
+.inv-song-bars.is-playing span:nth-child(4) { animation-delay: -1.1s; }
+@keyframes inv-song-bar-bounce { 0%, 100% { height: 6px; } 50% { height: 20px; } }
+@media (prefers-reduced-motion: reduce) {
+  .inv-song-bars.is-playing span { animation: none; height: 14px; }
+}
+
+.inv-song-hint { margin: 0; text-align: center; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px; opacity: 0.6; }
+.inv-song-hidden-mount { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 
 /* --- Gift registry --- */
 .inv-gift-actions { margin-top: 1.4rem; text-align: center; }
@@ -614,3 +637,146 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-gallery-3 .inv-gallery-item:nth-child(2) .inv-gallery-frame { transform: rotate(-1.2deg); }
 .inv-gallery-3 .inv-gallery-item:nth-child(3) .inv-gallery-frame { transform: rotate(1.2deg); }
 .inv-gallery-3 .inv-gallery-item:nth-child(n + 2) img { aspect-ratio: 4 / 5; }
+
+/* ===== SURPRISE REVEAL — ELEGANT ("romper el sello": wax-seal break, adult/formal themes) =====
+   Alternate cover to .reveal-* (the envelope, untouched). A wax seal hangs from a
+   silk thread; the guest breaks it and the name materializes in its place.
+   All hues come from the theme's --inv-* vars; blacks/whites below are shading only. */
+.reveal-elegant-root {
+  background: var(--inv-bg); color: var(--inv-text); min-height: 100vh; min-height: 100dvh;
+  position: relative; overflow: hidden; cursor: pointer;
+  display: flex; font-family: 'Nunito', sans-serif;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.reveal-elegant-root.reveal-elegant-opened { cursor: default; }
+.reveal-elegant-root::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--inv-primary) 9%, transparent) 0%, transparent 62%);
+}
+
+.reveal-elegant-stage {
+  position: relative; z-index: 2; width: 100%; max-width: 640px; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 1.25rem calc(1.5rem + env(safe-area-inset-bottom)); box-sizing: border-box;
+}
+
+/* Silk thread: hangs from the top edge and holds the seal. Static until released. */
+.reveal-elegant-ribbon {
+  width: 1px; flex: 1 1 3.25rem; min-height: 2.75rem; transform-origin: top center;
+  background: linear-gradient(to bottom, transparent 0%,
+    color-mix(in srgb, var(--inv-primary) 42%, transparent) 34%,
+    color-mix(in srgb, var(--inv-primary) 42%, transparent) 100%);
+}
+
+/* Seal and payoff share one grid cell so the name appears exactly where the seal was */
+.reveal-elegant-center { position: relative; display: grid; place-items: center; width: 100%; }
+.reveal-elegant-center > * { grid-area: 1 / 1; }
+
+/* The seal itself is the button — the affordance IS the object */
+.reveal-elegant-seal {
+  position: relative; width: 164px; height: 164px; padding: 0; border: 0;
+  background: transparent; border-radius: 50%; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.reveal-elegant-opened .reveal-elegant-seal { cursor: default; pointer-events: none; }
+.reveal-elegant-seal:focus-visible { outline: 1px solid var(--inv-accent); outline-offset: 8px; }
+
+.reveal-elegant-face, .reveal-elegant-intact, .reveal-elegant-half { position: absolute; inset: 0; display: block; }
+
+/* Jagged crack seam shared by the two pre-cracked halves */
+.reveal-elegant-half-l { clip-path: polygon(0% 0%, 46% 0%, 55% 18%, 44% 37%, 56% 58%, 47% 78%, 52% 100%, 0% 100%); }
+.reveal-elegant-half-r { clip-path: polygon(46% 0%, 100% 0%, 100% 100%, 52% 100%, 47% 78%, 56% 58%, 44% 37%, 55% 18%); }
+
+/* Wax: two offset organic blobs (rim + body) so the edge reads as poured wax */
+.reveal-elegant-wax-rim {
+  position: absolute; inset: 3px; display: block; transform: rotate(9deg);
+  border-radius: 52% 48% 47% 53% / 49% 51% 46% 54%;
+  background: color-mix(in srgb, var(--inv-primary) 82%, black);
+}
+.reveal-elegant-wax {
+  position: absolute; inset: 7px; display: block;
+  border-radius: 46% 54% 51% 49% / 53% 47% 54% 46%;
+  background: radial-gradient(circle at 34% 28%,
+    color-mix(in srgb, var(--inv-primary) 80%, white) 0%,
+    var(--inv-primary) 44%,
+    color-mix(in srgb, var(--inv-primary) 70%, black) 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.28), inset 0 -3px 6px rgba(0,0,0,0.22),
+    0 26px 50px -30px rgba(0,0,0,0.55);
+}
+.reveal-elegant-dark .reveal-elegant-wax {
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.24), inset 0 -3px 6px rgba(0,0,0,0.3),
+    0 26px 50px -30px rgba(0,0,0,0.7),
+    0 0 64px -18px color-mix(in srgb, var(--inv-primary) 40%, transparent);
+}
+/* Engraved circular groove */
+.reveal-elegant-wax-ring {
+  position: absolute; inset: 13%; display: block; border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.2);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.16), 0 1px 1px rgba(255,255,255,0.16);
+}
+/* Debossed monogram die (celebrant's initial, in the theme's own face) */
+.reveal-elegant-die {
+  position: absolute; inset: 0; display: grid; place-items: center; line-height: 1;
+  font-family: var(--inv-font); font-size: calc(2.3rem * var(--inv-scale, 1));
+  color: color-mix(in srgb, var(--inv-primary) 50%, black);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.22), 0 -1px 1px rgba(0,0,0,0.3);
+}
+.reveal-elegant-die-emoji { font-size: 1.9rem; text-shadow: none; opacity: 0.92; }
+
+/* One-shot hairline ring that breathes outward at the moment of the break */
+.reveal-elegant-ringpulse {
+  position: absolute; inset: -12px; display: block; border-radius: 50%; pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--inv-accent) 55%, transparent);
+}
+
+/* Payoff: materializes exactly where the seal was */
+.reveal-elegant-payoff {
+  width: min(92vw, 520px); pointer-events: none; text-align: center;
+  padding: 0 0.25rem; box-sizing: border-box;
+}
+.reveal-elegant-payoff-kicker {
+  margin: 0; font-size: 0.66rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--inv-accent);
+}
+.reveal-elegant-dark .reveal-elegant-payoff-kicker { color: color-mix(in srgb, var(--inv-primary) 75%, var(--inv-text)); }
+.reveal-elegant-name {
+  margin: 0.55rem 0 0; font-family: var(--inv-font); color: var(--inv-primary);
+  font-size: calc(clamp(1.9rem, 9vw, 2.7rem) * var(--inv-scale, 1)); line-height: 1.12;
+  text-wrap: balance; overflow-wrap: anywhere;
+}
+.reveal-elegant-dark .reveal-elegant-name { color: color-mix(in srgb, var(--inv-primary) 85%, white); }
+.reveal-elegant-payoff-divider { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-top: 1.15rem; }
+.reveal-elegant-payoff-line { display: block; width: 3.4rem; height: 1px; background: color-mix(in srgb, var(--inv-primary) 38%, transparent); }
+.reveal-elegant-payoff-line-l { transform-origin: right center; }
+.reveal-elegant-payoff-line-r { transform-origin: left center; }
+.reveal-elegant-payoff-star { font-size: 0.6rem; line-height: 1; color: var(--inv-primary); }
+
+/* Closed-state copy under the seal */
+.reveal-elegant-intro { margin-top: 2.2rem; text-align: center; }
+.reveal-elegant-kicker {
+  margin: 0; display: flex; align-items: center; justify-content: center; gap: 0.85rem;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 3.5px; text-transform: uppercase; opacity: 0.85;
+  white-space: nowrap;
+}
+.reveal-elegant-kicker::before, .reveal-elegant-kicker::after {
+  content: ""; flex: 0 1 2.2rem; width: 2.2rem; height: 1px;
+  background: color-mix(in srgb, var(--inv-primary) 35%, transparent);
+}
+.reveal-elegant-hint { margin: 0.85rem 0 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.6px; opacity: 0.5; }
+.reveal-elegant-dark .reveal-elegant-hint { opacity: 0.55; }
+
+.reveal-elegant-spacer { flex: 1.15 1 2rem; }
+
+/* Compact layout for short viewports (landscape phones) */
+@media (max-height: 600px) {
+  .reveal-elegant-seal { width: 128px; height: 128px; }
+  .reveal-elegant-die { font-size: calc(1.8rem * var(--inv-scale, 1)); }
+  .reveal-elegant-die-emoji { font-size: 1.5rem; }
+  .reveal-elegant-ribbon { min-height: 1.5rem; }
+  .reveal-elegant-intro { margin-top: 1.2rem; }
+  .reveal-elegant-name { font-size: calc(clamp(1.4rem, 6vh, 2rem) * var(--inv-scale, 1)); }
+}
+
+/* Preview inside builder: don't force full viewport height */
+.preview-frame .reveal-elegant-root { min-height: 560px; }

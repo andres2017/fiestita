@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { THEMES, CATEGORY_FIELDS, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
 import { InvitationReveal } from "./InvitationReveal";
+import { InvitationRevealElegant } from "./InvitationRevealElegant";
 import { InvitationSongPlayer } from "./InvitationSongPlayer";
 import { InvitationGiftCard } from "./InvitationGiftCard";
 import { InvitationItinerary } from "./InvitationItinerary";
@@ -10,6 +11,7 @@ import { InvitationPhotoGallery } from "./InvitationPhotoGallery";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
+const ELEGANT_REVEAL_CATEGORIES = new Set(["boda", "cumple_adulto"]);
 
 function useCountdown(dateStr, timeStr) {
   const [left, setLeft] = useState(null);
@@ -82,9 +84,10 @@ export const InvitationView = ({ inv, preview = false }) => {
   const dispInv = { ...inv, child_name: name, age };
 
   if (!opened) {
+    const RevealComponent = ELEGANT_REVEAL_CATEGORIES.has(theme.category) ? InvitationRevealElegant : InvitationReveal;
     return (
       <div className={`inv-root ${theme.dark ? "inv-dark" : "inv-light"}`} style={styleVars}>
-        <InvitationReveal
+        <RevealComponent
           emoji={theme.emoji}
           themeName={theme.name}
           guestLabel={name}

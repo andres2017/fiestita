@@ -805,3 +805,92 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 
 /* Preview inside builder: don't force full viewport height */
 .preview-frame .reveal-elegant-root { min-height: 560px; }
+
+/* ===== HERO — ELEGANT (opening/hero for boda, cumple_adulto, conferencia,
+   bautizo, confirmacion, novena — InvitationHeroElegant.jsx). Alternate to
+   .inv-hero above, which keeps serving every other category untouched.
+   Delicate corner line-art + a huge theme-font hero line + a hairline
+   divider, all driven by the theme's own --inv-* vars so it reads as
+   elegant on every one of the six very different palettes. ===== */
+.inv-hero-elegant-root { position: relative; text-align: center; padding: 2.75rem 0.25rem 2.25rem; }
+.inv-hero-elegant-inner { position: relative; z-index: 1; max-width: 400px; margin: 0 auto; }
+
+/* Corner marks: one sparse angular "twig" (CornerMark svg), mirrored into
+   all four corners via CSS transforms — a single source of shape. */
+.inv-hero-elegant-corner {
+  position: absolute; width: 42px; height: 42px;
+  color: color-mix(in srgb, var(--inv-primary) 62%, transparent);
+  pointer-events: none;
+}
+.inv-hero-elegant-corner svg { display: block; width: 100%; height: 100%; }
+.inv-hero-elegant-corner path {
+  fill: none; stroke: currentColor; stroke-width: 1.15px;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.inv-hero-elegant-corner circle { fill: var(--inv-accent); stroke: none; }
+.inv-hero-elegant-corner-tl { top: 0.35rem; left: 0.35rem; }
+.inv-hero-elegant-corner-tr { top: 0.35rem; right: 0.35rem; transform: scaleX(-1); }
+.inv-hero-elegant-corner-bl { bottom: 0.35rem; left: 0.35rem; transform: scaleY(-1); }
+.inv-hero-elegant-corner-br { bottom: 0.35rem; right: 0.35rem; transform: scale(-1, -1); }
+.inv-hero-elegant-dark .inv-hero-elegant-corner { color: color-mix(in srgb, var(--inv-primary) 76%, transparent); }
+
+/* Small letter-spaced eyebrow — copy.badge(dispInv): names alone for boda,
+   "[evento] de/donde [nombre]" for the other five. */
+.inv-hero-elegant-kicker {
+  margin: 0 0 0.9rem; font-family: 'Nunito', sans-serif;
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 2.75px; line-height: 1.5;
+  text-transform: uppercase; color: color-mix(in srgb, var(--inv-primary) 85%, var(--inv-text));
+}
+
+/* THE star — copy.title(dispInv), the full per-category announcement,
+   set huge in the theme's own display font. Balanced wrapping keeps the
+   longer sentences (novena, bautizo) from feeling like a wall of text. */
+.inv-hero-elegant-name {
+  margin: 0 0 1.15rem; font-family: var(--inv-font); color: var(--inv-primary);
+  font-size: calc(clamp(2.5rem, 12vw, 3.8rem) * var(--inv-scale, 1));
+  line-height: 1.18; text-wrap: balance; overflow-wrap: anywhere;
+}
+.inv-hero-elegant-dark .inv-hero-elegant-name { color: color-mix(in srgb, var(--inv-primary) 88%, white); }
+
+/* Small ringed medallion holding the theme emoji — generalizes the
+   reference's interlocked-rings graphic to any of the six themes. */
+.inv-hero-elegant-emblem { display: flex; justify-content: center; margin: 0 0 1.15rem; }
+.inv-hero-elegant-emblem-ring {
+  display: grid; place-items: center; width: 3.1rem; height: 3.1rem; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--inv-primary) 45%, transparent);
+  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.4);
+}
+.inv-hero-elegant-emblem-icon { font-size: 1.3rem; line-height: 1; }
+
+/* Calm supporting line — copy.subtitle(dispInv), echoes the reference's
+   italic paragraph. */
+.inv-hero-elegant-sub {
+  margin: 0 auto 1.5rem; max-width: 34ch; font-family: 'Nunito', sans-serif;
+  font-style: italic; font-weight: 600; font-size: 0.95rem; line-height: 1.75;
+  color: var(--inv-text); opacity: 0.85;
+}
+
+/* Ornamental divider: hairline fading at both ends + a centered glyph. */
+.inv-hero-elegant-divider { display: flex; align-items: center; justify-content: center; gap: 0.85rem; max-width: 200px; margin: 0 auto 1.35rem; }
+.inv-hero-elegant-divider-line {
+  flex: 1; height: 1px; transform-origin: center;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--inv-primary) 55%, transparent), transparent);
+}
+.inv-hero-elegant-divider-glyph { font-size: 0.68rem; color: var(--inv-accent); line-height: 1; }
+
+/* Date line: bold small-caps flanked by inline glyph marks (kept as
+   ::before/::after text content, not flex items, so it never breaks
+   oddly across lines if the fallback label wraps on a narrow screen). */
+.inv-hero-elegant-date {
+  margin: 0; font-family: 'Nunito', sans-serif; font-weight: 800;
+  letter-spacing: 2.5px; text-transform: uppercase; font-size: 0.85rem; color: var(--inv-text);
+}
+.inv-hero-elegant-date::before, .inv-hero-elegant-date::after {
+  content: "✦"; display: inline-block; margin: 0 0.6rem; font-size: 0.6rem;
+  color: var(--inv-accent); vertical-align: middle;
+}
+
+@media (max-width: 360px) {
+  .inv-hero-elegant-corner { width: 34px; height: 34px; }
+  .inv-hero-elegant-name { font-size: calc(clamp(2.1rem, 13vw, 3rem) * var(--inv-scale, 1)); }
+}

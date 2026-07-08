@@ -4,6 +4,7 @@ import axios from "axios";
 import { THEMES, CATEGORY_FIELDS, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
 import { InvitationReveal } from "./InvitationReveal";
 import { InvitationRevealElegant } from "./InvitationRevealElegant";
+import { InvitationHeroElegant } from "./InvitationHeroElegant";
 import { InvitationSongPlayer } from "./InvitationSongPlayer";
 import { InvitationGiftCard } from "./InvitationGiftCard";
 import { InvitationItinerary } from "./InvitationItinerary";
@@ -12,6 +13,7 @@ import { InvitationPhotoGallery } from "./InvitationPhotoGallery";
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
 const ELEGANT_REVEAL_CATEGORIES = new Set(["boda", "cumple_adulto"]);
+const ELEGANT_HERO_CATEGORIES = new Set(["boda", "cumple_adulto", "conferencia", "bautizo", "confirmacion", "novena"]);
 
 // Uploaded media may be a full URL (Cloudflare R2) or a legacy local backend path.
 const mediaUrl = (u) => (!u ? u : u.startsWith("http") ? u : `${BACKEND_BASE}${u}`);
@@ -115,15 +117,25 @@ export const InvitationView = ({ inv, preview = false }) => {
 
       <div className="inv-content">
         {/* HERO */}
-        <header className="inv-hero">
-          <div className="inv-badge" data-testid="inv-badge">
-            {copy.badge(dispInv)} · {inv.event_date ? inv.event_date.split("-").reverse().join(" · ") : ""}
-          </div>
-          <h1 className="inv-title" data-testid="inv-title">{copy.title(dispInv)}</h1>
-          {inv.child_full_name && <p className="inv-fullname">{inv.child_full_name.toUpperCase()}</p>}
-          <p className="inv-subtitle">{copy.subtitle(dispInv)}</p>
-          <div className="inv-arrows">▼ ▼ ▼</div>
-        </header>
+        {ELEGANT_HERO_CATEGORIES.has(theme.category) ? (
+          <InvitationHeroElegant
+            copy={copy}
+            dispInv={dispInv}
+            eventDate={inv.event_date}
+            emoji={theme.emoji}
+            dark={theme.dark}
+          />
+        ) : (
+          <header className="inv-hero">
+            <div className="inv-badge" data-testid="inv-badge">
+              {copy.badge(dispInv)} · {inv.event_date ? inv.event_date.split("-").reverse().join(" · ") : ""}
+            </div>
+            <h1 className="inv-title" data-testid="inv-title">{copy.title(dispInv)}</h1>
+            {inv.child_full_name && <p className="inv-fullname">{inv.child_full_name.toUpperCase()}</p>}
+            <p className="inv-subtitle">{copy.subtitle(dispInv)}</p>
+            <div className="inv-arrows">▼ ▼ ▼</div>
+          </header>
+        )}
 
         {/* VIDEO */}
         {inv.video_url && (

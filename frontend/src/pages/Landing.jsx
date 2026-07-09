@@ -1,8 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CATEGORIES, THEME_LIST } from "../themes";
+import { CATEGORIES, THEME_LIST, THEMES } from "../themes";
 import { InvitationRevealElegant } from "../components/InvitationRevealElegant";
+import { InvitationHeroElegant } from "../components/InvitationHeroElegant";
 import axios from "axios";
+
+// Demo content for the hero's live phone-mockup preview — a real render of the actual
+// InvitationHeroElegant component (boda theme), not a stock photo, so the very first
+// thing a visitor sees IS the product. Same couple/theme as the public demo invitation
+// (see the "crear demo" admin flow), so the two stay consistent.
+const HERO_DEMO_THEME = THEMES.boda;
+const HERO_DEMO_INV = { child_name: "Isabella y Mateo", event_subtitle: "" };
+const HERO_DEMO_STYLE_VARS = {
+  "--inv-bg": HERO_DEMO_THEME.colors.bg,
+  "--inv-surface": HERO_DEMO_THEME.colors.surface,
+  "--inv-primary": HERO_DEMO_THEME.colors.primary,
+  "--inv-text": HERO_DEMO_THEME.colors.text,
+  "--inv-accent": HERO_DEMO_THEME.colors.accent,
+  "--inv-soft": HERO_DEMO_THEME.colors.soft,
+  "--inv-font": HERO_DEMO_THEME.font,
+  "--inv-scale": HERO_DEMO_THEME.fontScale,
+};
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CONTACT_WHATSAPP = "573108175926";
@@ -22,7 +40,10 @@ const BRAND_STYLE_VARS = {
   "--inv-text": "#FFF5E8",
   "--inv-accent": "#FFD166",
   "--inv-soft": "#FFE3C2",
-  "--inv-font": "'Fredoka', sans-serif",
+  // Fredoka (the rest of the landing page's font) reads as a cartoon bubble letter
+  // when it's the lone engraved monogram inside the wax seal — Cinzel Decorative
+  // has that carved-into-stone/metal look real seal dies use.
+  "--inv-font": "'Cinzel Decorative', serif",
   "--inv-scale": 1,
 };
 
@@ -86,7 +107,17 @@ export default function Landing() {
           </div>
         </div>
         <div className="landing-hero-img animate-fade-up delay-5">
-          <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?crop=entropy&cs=srgb&fm=jpg&q=85&w=900" alt="Celebración con confeti" />
+          <div className="landing-hero-phone" data-testid="landing-hero-phone">
+            <div className="landing-hero-phone-screen" style={HERO_DEMO_STYLE_VARS}>
+              <InvitationHeroElegant
+                copy={HERO_DEMO_THEME.copy}
+                dispInv={HERO_DEMO_INV}
+                eventDate="2026-12-12"
+                emoji={HERO_DEMO_THEME.emoji}
+                category="boda"
+              />
+            </div>
+          </div>
           <div className="landing-nowplaying liquid-glass" data-testid="landing-nowplaying">
             <span className="landing-nowplaying-disc" aria-hidden="true" />
             <span className="landing-nowplaying-info">

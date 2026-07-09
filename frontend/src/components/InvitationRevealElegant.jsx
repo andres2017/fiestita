@@ -16,7 +16,12 @@ import { motion, useReducedMotion } from "framer-motion";
  * caps and underlined by the house ornamental divider (hairline ✦ hairline)
  * drawing itself outward. Then the cover fades and onOpen() fires.
  *
- * Restraint is deliberate: no confetti, no bounce/spring, no idle motion.
+ * Restraint is deliberate: no confetti, no bounce/spring, no overshoot. The
+ * only idle motion is a soft breathing glow and a few twinkling motes around
+ * the seal while it waits to be tapped — otherwise everything holds still
+ * until the guest acts. On mount, the thread drops, the seal settles in
+ * after it, and the hint copy below settles in last — a brief one-shot
+ * choreography, not a loop.
  * Every color comes from the theme's --inv-* custom properties so it works
  * across all adult palettes (tan/gold wedding, wine/gold confirmation,
  * black/gold night party), light or dark.
@@ -152,13 +157,15 @@ export const InvitationRevealElegant = ({
       : { opacity: [0, 0.5, 0], scale: 1.5, transition: { duration: 0.85, ease: EASE, times: [0, 0.22, 1] } },
   };
   const ribbonV = {
-    sealed: { scaleY: 1, opacity: 1 },
+    hidden: { scaleY: 0, opacity: 0 }, // mount only — thread not yet dropped
+    sealed: { scaleY: 1, opacity: 1, transition: { duration: 0.6, ease: EASE } },
     cracking: reduced
       ? { opacity: 0, transition: { duration: 0.3 } }
       : { scaleY: 0, opacity: 0, transition: { delay: 0.12, duration: 0.55, ease: EASE } },
   };
   const introV = {
-    sealed: { opacity: 1, y: 0 },
+    hidden: { opacity: 0, y: 10 }, // mount only — settles in after the seal
+    sealed: { opacity: 1, y: 0, transition: { duration: 0.55, delay: 0.75, ease: EASE } },
     cracking: { opacity: 0, y: 6, transition: { duration: 0.3, ease: "easeOut" } },
   };
 
@@ -197,9 +204,17 @@ export const InvitationRevealElegant = ({
       transition={{ duration: 0.55, ease: "easeOut" }}
     >
       <div className="reveal-elegant-stage">
-        <motion.div className="reveal-elegant-ribbon" variants={ribbonV} animate={crackAnim} aria-hidden="true" />
+        <motion.div className="reveal-elegant-ribbon" variants={ribbonV} initial={reduced ? false : "hidden"} animate={crackAnim} aria-hidden="true" />
 
         <div className="reveal-elegant-center">
+          <span className="reveal-elegant-ambient" aria-hidden="true">
+            <span className="reveal-elegant-glow" />
+            <span className="reveal-elegant-spark reveal-elegant-spark-1" />
+            <span className="reveal-elegant-spark reveal-elegant-spark-2" />
+            <span className="reveal-elegant-spark reveal-elegant-spark-3" />
+            <span className="reveal-elegant-spark reveal-elegant-spark-4" />
+          </span>
+
           <motion.button
             type="button"
             className="reveal-elegant-seal"
@@ -207,6 +222,8 @@ export const InvitationRevealElegant = ({
             aria-label="Abrir invitación"
             aria-disabled={!canTap}
             onClick={open}
+            initial={reduced ? false : { opacity: 0, y: -14 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.75, delay: 0.3, ease: EASE } }}
             whileHover={canTap && !reduced ? { scale: 1.02 } : undefined}
             whileTap={canTap && !reduced ? { scale: 0.955 } : undefined}
             transition={{ type: "tween", duration: 0.18, ease: "easeOut" }}
@@ -240,7 +257,7 @@ export const InvitationRevealElegant = ({
           </div>
         </div>
 
-        <motion.div className="reveal-elegant-intro" variants={introV} animate={crackAnim}>
+        <motion.div className="reveal-elegant-intro" variants={introV} initial={reduced ? false : "hidden"} animate={crackAnim}>
           <p className="reveal-elegant-kicker">Una invitación para ti</p>
           <p className="reveal-elegant-hint">Toca el sello para abrirla</p>
         </motion.div>

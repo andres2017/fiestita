@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Press+Start+2P&family=Dancing+Script:wght@500;700&family=Bangers&family=Bowlby+One+SC&family=Space+Grotesk:wght@400;600;700&family=Caveat+Brush&family=Cinzel+Decorative:wght@700;900&family=Bungee&family=Pirata+One&family=Comfortaa:wght@600;700&family=Baloo+2:wght@600;700&family=Chewy&family=Anton&family=Great+Vibes&family=Poiret+One&family=Sora:wght@400;600;700&family=Sacramento&family=Cormorant+Garamond:wght@500;600;700&family=Lilita+One&family=Russo+One&family=Mountains+of+Christmas:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Press+Start+2P&family=Dancing+Script:wght@500;700&family=Bangers&family=Bowlby+One+SC&family=Space+Grotesk:wght@400;600;700&family=Caveat+Brush&family=Cinzel+Decorative:wght@700;900&family=Bungee&family=Pirata+One&family=Comfortaa:wght@600;700&family=Baloo+2:wght@600;700&family=Chewy&family=Anton&family=Great+Vibes&family=Poiret+One&family=Sora:wght@400;600;700&family=Sacramento&family=Cormorant+Garamond:wght@500;600;700&family=Lilita+One&family=Russo+One&family=Mountains+of+Christmas:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,500&family=Montserrat:wght@300;500;600&display=swap');
 
 :root {
   --l-primary: #FF6B6B;
@@ -806,131 +806,109 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 /* Preview inside builder: don't force full viewport height */
 .preview-frame .reveal-elegant-root { min-height: 560px; }
 
-/* ===== HERO — ELEGANT (opening/hero for boda, cumple_adulto, conferencia,
-   bautizo, confirmacion, novena — InvitationHeroElegant.jsx). Alternate to
-   .inv-hero above, which keeps serving every other category untouched.
-   Delicate corner line-art + a huge theme-font hero line + a hairline
-   divider, all driven by the theme's own --inv-* vars so it reads as
-   elegant on every one of the six very different palettes. ===== */
-.inv-hero-elegant-root { position: relative; text-align: center; padding: 2.75rem 0.25rem 2.25rem; }
-.inv-hero-elegant-inner { position: relative; z-index: 1; max-width: 400px; margin: 0 auto; }
-
-/* Corner marks: one sparse angular "twig" (CornerMark svg), mirrored into
-   all four corners via CSS transforms — a single source of shape. */
-.inv-hero-elegant-corner {
-  position: absolute; width: 42px; height: 42px;
-  color: color-mix(in srgb, var(--inv-primary) 62%, transparent);
-  pointer-events: none;
-}
-.inv-hero-elegant-corner svg { display: block; width: 100%; height: 100%; }
-.inv-hero-elegant-corner path {
-  fill: none; stroke: currentColor; stroke-width: 1.15px;
-  stroke-linecap: round; stroke-linejoin: round;
-}
-.inv-hero-elegant-corner circle { fill: var(--inv-accent); stroke: none; }
-.inv-hero-elegant-corner-tl { top: 0.35rem; left: 0.35rem; }
-.inv-hero-elegant-corner-tr { top: 0.35rem; right: 0.35rem; transform: scaleX(-1); }
-.inv-hero-elegant-corner-bl { bottom: 0.35rem; left: 0.35rem; transform: scaleY(-1); }
-.inv-hero-elegant-corner-br { bottom: 0.35rem; right: 0.35rem; transform: scale(-1, -1); }
-.inv-hero-elegant-dark .inv-hero-elegant-corner { color: color-mix(in srgb, var(--inv-primary) 76%, transparent); }
-
-/* Small letter-spaced eyebrow — copy.badge(dispInv): names alone for boda,
-   "[evento] de/donde [nombre]" for the other five. */
-.inv-hero-elegant-kicker {
-  margin: 0 0 0.9rem; font-family: 'Nunito', sans-serif;
-  font-size: 0.72rem; font-weight: 800; letter-spacing: 2.75px; line-height: 1.5;
-  text-transform: uppercase; color: color-mix(in srgb, var(--inv-primary) 85%, var(--inv-text));
+/* ===== HERO — GLASS (dark glassmorphic / mesh-gradient opening for boda,
+   cumple_adulto, conferencia, bautizo, confirmacion, novena, partido,
+   parche, reto_deportivo — InvitationHeroElegant.jsx). Alternate to
+   .inv-hero above, which keeps serving cumple_infantil untouched.
+   Founder-approved concept piece, ported: animated mesh gradient + drifting
+   glow orbs behind a frosted glass card, Playfair Display for the
+   announcement, Montserrat for labels. Every hue is derived from the
+   theme's own --inv-primary/--inv-accent mixed toward near-black via
+   color-mix, so this always renders dark/dramatic regardless of whether the
+   theme itself is nominally light or dark — a deliberate "cover moment",
+   not a light/dark variant of the rest of the card. ===== */
+.inv-hero-glass {
+  position: relative; isolation: isolate; overflow: hidden;
+  padding: 2.75rem 1.1rem 3rem; margin: -2rem -1.25rem 1.75rem;
 }
 
-/* THE star — copy.title(dispInv), the full per-category announcement,
-   set huge in the theme's own display font. Balanced wrapping keeps the
-   longer sentences (novena, bautizo) from feeling like a wall of text. */
-.inv-hero-elegant-name {
-  margin: 0 0 1.15rem; font-family: var(--inv-font); color: var(--inv-primary);
-  /* --inv-scale ranges ~0.8-1.4 across themes; applying it in full on top of
-     an already-large hero size made script fonts (boda 1.4, cielito 1.35)
-     balloon and wrap across many lines. Damp it to half its deviation from 1
-     so high-scale themes stay legible/contained without flattening the
-     per-theme sizing intent entirely. */
-  font-size: calc(clamp(2.2rem, 10vw, 3.4rem) * (1 + (var(--inv-scale, 1) - 1) * 0.5));
-  line-height: 1.18; text-wrap: balance; overflow-wrap: anywhere;
-}
-.inv-hero-elegant-dark .inv-hero-elegant-name { color: color-mix(in srgb, var(--inv-primary) 88%, white); }
-
-/* Small ringed medallion holding the theme emoji — generalizes the
-   reference's interlocked-rings graphic to any of the six themes. */
-.inv-hero-elegant-emblem { display: flex; justify-content: center; margin: 0 0 1.15rem; }
-.inv-hero-elegant-emblem-ring {
-  display: grid; place-items: center; width: 3.1rem; height: 3.1rem; border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--inv-primary) 45%, transparent);
-  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.4);
-}
-.inv-hero-elegant-emblem-icon { font-size: 1.3rem; line-height: 1; }
-
-/* Calm supporting line — copy.subtitle(dispInv), echoes the reference's
-   italic paragraph. */
-.inv-hero-elegant-sub {
-  margin: 0 auto 1.5rem; max-width: 34ch; font-family: 'Nunito', sans-serif;
-  font-style: italic; font-weight: 600; font-size: 0.95rem; line-height: 1.75;
-  color: var(--inv-text); opacity: 0.85;
+.inv-hero-glass-atmosphere {
+  position: absolute; inset: 0; z-index: -2;
+  background:
+    radial-gradient(ellipse 85% 60% at 18% 12%, color-mix(in srgb, var(--inv-primary) 50%, transparent), transparent 60%),
+    radial-gradient(ellipse 75% 65% at 88% 18%, color-mix(in srgb, var(--inv-accent) 42%, transparent), transparent 65%),
+    radial-gradient(ellipse 95% 70% at 50% 105%, color-mix(in srgb, var(--inv-soft) 40%, transparent), transparent 60%),
+    color-mix(in srgb, var(--inv-primary) 14%, #060309 86%);
 }
 
-/* Ornamental divider: hairline fading at both ends + a centered glyph. */
-.inv-hero-elegant-divider { display: flex; align-items: center; justify-content: center; gap: 0.85rem; max-width: 200px; margin: 0 auto 1.35rem; }
-.inv-hero-elegant-divider-line {
+.inv-hero-glass-orb {
+  position: absolute; z-index: -1; border-radius: 50%; filter: blur(46px); opacity: 0.5; pointer-events: none;
+}
+.inv-hero-glass-orb-1 { width: 220px; height: 220px; left: -60px; top: 4%; background: radial-gradient(circle, var(--inv-accent) 0%, transparent 70%); animation: heroGlassFloatA 16s ease-in-out infinite; }
+.inv-hero-glass-orb-2 { width: 190px; height: 190px; right: -50px; top: 45%; background: radial-gradient(circle, var(--inv-primary) 0%, transparent 70%); animation: heroGlassFloatB 20s ease-in-out infinite; }
+.inv-hero-glass-orb-3 { width: 150px; height: 150px; left: 8%; bottom: -40px; background: radial-gradient(circle, var(--inv-soft) 0%, transparent 70%); animation: heroGlassFloatC 18s ease-in-out infinite; }
+@keyframes heroGlassFloatA { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(26px, 32px); } }
+@keyframes heroGlassFloatB { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-32px, -20px); } }
+@keyframes heroGlassFloatC { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, -26px); } }
+
+.inv-hero-glass-card {
+  position: relative; z-index: 1; max-width: 26rem; margin: 0 auto; text-align: center;
+  background: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--inv-accent) 35%, rgba(255,255,255,0.14));
+  border-radius: 1.5rem; padding: 2.75rem 1.5rem 2.1rem;
+  box-shadow: 0 2px 0 rgba(255,255,255,0.06) inset, 0 30px 70px -26px rgba(0,0,0,0.7);
+}
+
+.inv-hero-glass-vine { position: absolute; z-index: 1; width: 70px; height: 70px; color: color-mix(in srgb, var(--inv-accent) 80%, white); opacity: 0.5; pointer-events: none; }
+.inv-hero-glass-vine svg { display: block; width: 100%; height: 100%; }
+.inv-hero-glass-vine-tl { top: -14px; left: -14px; }
+.inv-hero-glass-vine-br { bottom: -14px; right: -14px; transform: rotate(180deg); }
+
+.inv-hero-glass-kicker {
+  margin: 0 0 1.1rem; font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 500;
+  font-size: 0.66rem; letter-spacing: 0.28em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--inv-accent) 85%, white);
+}
+
+.inv-hero-glass-emblem { display: flex; justify-content: center; margin: 0 0 1.1rem; }
+.inv-hero-glass-emblem-ring {
+  display: grid; place-items: center; width: 3.2rem; height: 3.2rem; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--inv-accent) 55%, transparent);
+  box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--inv-accent) 60%, transparent);
+}
+.inv-hero-glass-emblem-icon { font-size: 1.35rem; line-height: 1; }
+
+.inv-hero-glass-name {
+  margin: 0 0 1.1rem; font-family: 'Playfair Display', serif; font-weight: 700;
+  font-size: clamp(2.1rem, 9vw, 2.9rem); line-height: 1.15;
+  color: color-mix(in srgb, var(--inv-accent) 55%, white 45%);
+  text-shadow: 0 0 34px color-mix(in srgb, var(--inv-accent) 45%, transparent);
+  text-wrap: balance; overflow-wrap: anywhere;
+}
+
+.inv-hero-glass-sub {
+  margin: 0 auto 1.75rem; max-width: 32ch; font-family: 'Playfair Display', serif;
+  font-style: italic; font-weight: 500; font-size: 0.98rem; line-height: 1.6;
+  color: #fff; opacity: 0.82;
+}
+
+.inv-hero-glass-divider { display: flex; align-items: center; justify-content: center; gap: 0.8rem; max-width: 190px; margin: 0 auto 1.35rem; }
+.inv-hero-glass-divider-line {
   flex: 1; height: 1px; transform-origin: center;
-  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--inv-primary) 55%, transparent), transparent);
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--inv-accent) 60%, white 20%), transparent);
 }
-.inv-hero-elegant-divider-glyph { font-size: 0.68rem; color: var(--inv-accent); line-height: 1; }
+.inv-hero-glass-divider-glyph { font-size: 0.65rem; color: color-mix(in srgb, var(--inv-accent) 80%, white); line-height: 1; }
 
-/* Date line: bold small-caps flanked by inline glyph marks (kept as
-   ::before/::after text content, not flex items, so it never breaks
-   oddly across lines if the fallback label wraps on a narrow screen). */
-.inv-hero-elegant-date {
-  margin: 0; font-family: 'Nunito', sans-serif; font-weight: 800;
-  letter-spacing: 2.5px; text-transform: uppercase; font-size: 0.85rem; color: var(--inv-text);
-}
-.inv-hero-elegant-date::before, .inv-hero-elegant-date::after {
-  content: "✦"; display: inline-block; margin: 0 0.6rem; font-size: 0.6rem;
-  color: var(--inv-accent); vertical-align: middle;
+.inv-hero-glass-date {
+  margin: 0 0 1.5rem; font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; font-size: 0.78rem; color: #fff; opacity: 0.92;
 }
 
-@media (max-width: 360px) {
-  .inv-hero-elegant-corner { width: 34px; height: 34px; }
-  .inv-hero-elegant-name { font-size: calc(clamp(1.8rem, 11vw, 2.6rem) * (1 + (var(--inv-scale, 1) - 1) * 0.5)); }
+.inv-hero-glass-scroll { display: flex; justify-content: center; }
+.inv-hero-glass-scroll-dot {
+  display: inline-block; width: 2.1rem; height: 2.1rem; border-radius: 50%; line-height: 2.1rem;
+  border: 1px solid color-mix(in srgb, var(--inv-accent) 45%, transparent);
+  color: color-mix(in srgb, var(--inv-accent) 85%, white); font-size: 0.7rem;
+  animation: heroGlassBob 2.4s ease-in-out infinite; will-change: transform;
 }
+@keyframes heroGlassBob { 0%, 100% { margin-top: 0; } 50% { margin-top: 5px; } }
 
-/* ===== HERO — ELEGANT, ENERGETIC VARIANT (mundial, tardeo, gloria — set via
-   the `energetic` prop on InvitationHeroElegant). Same skeleton, same
-   sizing, same motion as above; only the ornament mood changes. Those three
-   themes run bold impact/poster fonts (Anton, Lilita One, Russo One) on
-   saturated near-neon dark palettes with shouty copy ("¡GOOOL!", "¡DE UNA,
-   ME APUNTO!") — the default twig ornament's 1.15px organic hairline reads
-   as wedding-stationery filigree and undercuts that register. This variant
-   swaps in CornerMarkEnergetic (crop-mark bracket + speed-slashes + a
-   filled diamond stud) with a heavier stroke and sharp miter/square joins,
-   plus a bolder divider/date glyph and a more saturated emblem ring. ===== */
-.inv-hero-elegant-energetic .inv-hero-elegant-corner {
-  width: 46px; height: 46px;
-  color: color-mix(in srgb, var(--inv-primary) 88%, transparent);
-}
-.inv-hero-elegant-energetic .inv-hero-elegant-corner path {
-  stroke-width: 2.75px; stroke-linecap: square; stroke-linejoin: miter;
-}
-.inv-hero-elegant-energetic .inv-hero-elegant-corner rect { fill: var(--inv-accent); stroke: none; }
-
-.inv-hero-elegant-energetic .inv-hero-elegant-divider-line { height: 2px; }
-.inv-hero-elegant-energetic .inv-hero-elegant-divider-glyph { font-size: 0.6rem; }
-
-.inv-hero-elegant-energetic .inv-hero-elegant-date::before,
-.inv-hero-elegant-energetic .inv-hero-elegant-date::after { content: "◆"; font-size: 0.55rem; }
-
-.inv-hero-elegant-energetic .inv-hero-elegant-emblem-ring {
-  border-width: 2px;
-  border-color: color-mix(in srgb, var(--inv-primary) 70%, transparent);
-  box-shadow: 0 12px 26px -14px color-mix(in srgb, var(--inv-primary) 55%, transparent);
+@media (prefers-reduced-motion: reduce) {
+  .inv-hero-glass-orb, .inv-hero-glass-scroll-dot { animation: none; }
 }
 
 @media (max-width: 360px) {
-  .inv-hero-elegant-energetic .inv-hero-elegant-corner { width: 38px; height: 38px; }
+  .inv-hero-glass-card { padding: 2.2rem 1.1rem 1.7rem; }
+  .inv-hero-glass-name { font-size: clamp(1.8rem, 10vw, 2.4rem); }
 }

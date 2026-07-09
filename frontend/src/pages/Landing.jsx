@@ -2,28 +2,18 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CATEGORIES, THEME_LIST, THEMES } from "../themes";
 import { InvitationRevealElegant } from "../components/InvitationRevealElegant";
-import { InvitationHeroElegant } from "../components/InvitationHeroElegant";
 import axios from "axios";
 
-// Demo content for the hero's live phone-mockup preview — a real render of the actual
-// InvitationHeroElegant component (boda theme), not a stock photo, so the very first
-// thing a visitor sees IS the product. Same couple/theme as the public demo invitation
-// (see the "crear demo" admin flow), so the two stay consistent.
+// Demo content for the hero's mini preview card. Same couple/theme as the public demo
+// invitation (see DEMO_INVITATION_ID below), so the two stay consistent — but this is a
+// small, purpose-built minimal card, NOT a live render of the full InvitationHeroElegant
+// (that component is sized for a whole invitation page; stuffed into a hero-image-sized
+// slot it was either clipped mid-content or forced the frame to grow full-height —
+// tried both, neither read as "minimalista").
 const HERO_DEMO_THEME = THEMES.boda;
-const HERO_DEMO_INV = { child_name: "Isabella y Mateo", event_subtitle: "" };
-const HERO_DEMO_STYLE_VARS = {
-  "--inv-bg": HERO_DEMO_THEME.colors.bg,
-  "--inv-surface": HERO_DEMO_THEME.colors.surface,
-  "--inv-primary": HERO_DEMO_THEME.colors.primary,
-  "--inv-text": HERO_DEMO_THEME.colors.text,
-  "--inv-accent": HERO_DEMO_THEME.colors.accent,
-  "--inv-soft": HERO_DEMO_THEME.colors.soft,
-  "--inv-font": HERO_DEMO_THEME.font,
-  "--inv-scale": HERO_DEMO_THEME.fontScale,
-};
-// Real, live invitation (same couple/theme as the preview above) — created via the
-// admin endpoint, paid:true so it's publicly viewable — behind the "Ver invitación
-// real" link, so the phone mockup isn't just a static screenshot pretending.
+// Real, live invitation (same couple/theme as the preview card) — created via the admin
+// endpoint, paid:true so it's publicly viewable — linked right under the mini card, so
+// visitors can see the actual full invitation, not just this small taste of it.
 const DEMO_INVITATION_ID = "e08ce410-20df-4d8a-b9a1-26a63c299f1b";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -111,15 +101,24 @@ export default function Landing() {
           </div>
         </div>
         <div className="landing-hero-img animate-fade-up delay-5">
-          <div className="landing-hero-phone" data-testid="landing-hero-phone">
-            <div className="landing-hero-phone-screen" style={HERO_DEMO_STYLE_VARS}>
-              <InvitationHeroElegant
-                copy={HERO_DEMO_THEME.copy}
-                dispInv={HERO_DEMO_INV}
-                eventDate="2026-12-12"
-                emoji={HERO_DEMO_THEME.emoji}
-                category="boda"
-              />
+          <div
+            className="landing-hero-mini"
+            data-testid="landing-hero-mini"
+            style={{
+              background: `radial-gradient(ellipse 120% 90% at 30% 0%, color-mix(in srgb, ${HERO_DEMO_THEME.colors.primary} 45%, transparent), transparent 65%), color-mix(in srgb, ${HERO_DEMO_THEME.colors.primary} 16%, #0a0709 84%)`,
+              borderColor: `color-mix(in srgb, ${HERO_DEMO_THEME.colors.accent} 45%, #1F2937)`,
+            }}
+          >
+            <span className="landing-hero-mini-badge">DEMO</span>
+            <span className="landing-hero-mini-ring" aria-hidden="true">{HERO_DEMO_THEME.emoji}</span>
+            <p className="landing-hero-mini-name">Isabella y Mateo</p>
+            <p className="landing-hero-mini-date">12 DIC · 2026</p>
+            <div className="landing-nowplaying liquid-glass" data-testid="landing-nowplaying">
+              <span className="landing-nowplaying-disc" aria-hidden="true" />
+              <span className="landing-nowplaying-info">
+                <span className="landing-nowplaying-title">Tu canción favorita</span>
+                <span className="landing-nowplaying-sub">🎵 sonando en tu invitación</span>
+              </span>
             </div>
           </div>
           <a
@@ -131,13 +130,6 @@ export default function Landing() {
           >
             👉 Ver esta invitación real
           </a>
-          <div className="landing-nowplaying liquid-glass" data-testid="landing-nowplaying">
-            <span className="landing-nowplaying-disc" aria-hidden="true" />
-            <span className="landing-nowplaying-info">
-              <span className="landing-nowplaying-title">Tu canción favorita</span>
-              <span className="landing-nowplaying-sub">🎵 sonando en tu invitación</span>
-            </span>
-          </div>
         </div>
       </header>
 

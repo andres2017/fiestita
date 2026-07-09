@@ -62,27 +62,38 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .landing-hero p { font-size: 1.15rem; line-height: 1.7; color: #4B5563; margin-bottom: 2rem; }
 .landing-hero-img { position: relative; }
 
-/* The hero image slot holds a live, real render of InvitationHeroElegant (boda demo
-   content) instead of a stock photo — "show, don't tell" for what the product actually
-   makes. Same bold frame treatment the old <img> used (thick border, offset hard
-   shadow, slight tilt) so swapping the content in didn't cost the page its own style.
-   .landing-hero-phone-screen's padding matches what .inv-hero-glass expects from its
-   normal parent (.inv-content) — its negative margin cancels this padding exactly, the
-   same trick used to fuse the hero + quick-info card elsewhere, so the card fills this
-   frame edge-to-edge instead of floating with a mismatched gap around it. */
-.landing-hero-phone {
-  max-width: 380px; margin: 0 auto; border-radius: 2rem; border: 4px solid #1F2937;
-  box-shadow: 10px 10px 0 var(--l-accent); transform: rotate(2deg);
-  overflow: hidden; background: #060309;
+/* The hero image slot holds a small, purpose-built preview card instead of a stock
+   photo — "show, don't tell" for what the product actually makes, without trying to
+   cram the full (much taller) InvitationHeroElegant into a hero-image-sized slot. Two
+   earlier versions did exactly that: one clipped it mid-content (looked broken), the
+   other let it grow full-height (looked oversized/heavy) — neither read as the
+   "minimalista" look the founder asked for, so this is a deliberately small, quiet card
+   instead of a live component render. Fixed size, not content-driven, on purpose. Same
+   bold frame treatment the old <img> used (thick border, offset hard shadow, slight
+   tilt) so swapping the content in didn't cost the page its own style. Colors come from
+   the boda theme via inline style (color-mix isn't usable outside an --inv-* scope, so
+   the mix happens in JS/inline instead of a CSS custom property here). */
+.landing-hero-mini {
+  position: relative; max-width: 300px; margin: 0 auto 1rem; padding: 2.75rem 1.5rem;
+  border-radius: 1.5rem; border: 4px solid #1F2937; box-shadow: 10px 10px 0 var(--l-accent);
+  transform: rotate(2deg); text-align: center; color: #fff;
 }
-.landing-hero-phone-screen {
-  position: relative; padding: 2rem 1.25rem 3rem; overflow: hidden;
-  max-height: 580px; display: flex; align-items: flex-start;
+.landing-hero-mini-badge {
+  position: absolute; top: 0.9rem; left: 0.9rem; padding: 0.2rem 0.65rem; border-radius: 9999px;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+  font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 0.62rem; letter-spacing: 2px;
 }
-.landing-hero-phone-screen .inv-hero-glass { width: 100%; }
+.landing-hero-mini-ring { display: block; font-size: 1.7rem; margin: 0.5rem 0 1rem; }
+.landing-hero-mini-name {
+  margin: 0 0 0.6rem; font-family: 'Great Vibes', cursive; font-size: 2.1rem; line-height: 1.15;
+}
+.landing-hero-mini-date {
+  margin: 0; font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 600;
+  font-size: 0.68rem; letter-spacing: 0.2em; opacity: 0.85;
+}
 
 .landing-hero-demo-link {
-  display: block; text-align: center; margin: 1.1rem auto 0; font-weight: 800;
+  display: block; text-align: center; margin: 0 auto 1rem; font-weight: 800;
   font-size: 0.9rem; color: var(--l-secondary); text-decoration: none;
 }
 .landing-hero-demo-link:hover { text-decoration: underline; }
@@ -93,11 +104,14 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
    a showcase and never actually stops. */
 /* Compound selector (not just .landing-nowplaying) so this position:absolute reliably
    beats .liquid-glass's own position:relative regardless of which rule is declared
-   later in the file — specificity, not source order, decides the winner here. */
+   later in the file — specificity, not source order, decides the winner here. Nested
+   inside .landing-hero-mini (which is what it's anchored/centered against) and
+   counter-rotated so it reads level even though its tilted parent card isn't. */
 .landing-nowplaying.liquid-glass {
-  position: absolute; left: -1rem; bottom: -1.25rem; z-index: 3;
-  display: flex; align-items: center; gap: 0.7rem; max-width: 230px;
-  padding: 0.65rem 1.1rem 0.65rem 0.65rem; border-radius: 1.25rem;
+  position: absolute; left: 50%; bottom: -1.4rem; z-index: 3;
+  transform: translateX(-50%) rotate(-2deg);
+  display: flex; align-items: center; gap: 0.6rem; width: max-content; max-width: 210px;
+  padding: 0.55rem 0.95rem 0.55rem 0.55rem; border-radius: 1.25rem;
 }
 .landing-nowplaying-disc {
   position: relative; flex-shrink: 0; display: block; width: 2.6rem; height: 2.6rem; border-radius: 50%;
@@ -116,9 +130,6 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .landing-nowplaying-sub { font-size: 0.72rem; font-weight: 700; color: #6B7280; }
 @media (prefers-reduced-motion: reduce) {
   .landing-nowplaying-disc { animation: none; }
-}
-@media (max-width: 720px) {
-  .landing-nowplaying.liquid-glass { position: static; margin-top: 1rem; max-width: 100%; }
 }
 
 .landing-cta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }

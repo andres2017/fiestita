@@ -162,7 +162,7 @@ export const InvitationView = ({ inv, preview = false }) => {
             ) : (
               <header className="inv-hero">
                 <div className="inv-badge" data-testid="inv-badge">
-                  {copy.badge(dispInv)} · {inv.event_date ? inv.event_date.split("-").reverse().join(" · ") : ""}
+                  Tienes una invitación especial{inv.event_date ? ` · ${inv.event_date.split("-").reverse().join(" · ")}` : ""}
                 </div>
                 <h1 className="inv-title" data-testid="inv-title">{copy.title(dispInv)}</h1>
                 {inv.child_full_name && <p className="inv-fullname">{inv.child_full_name.toUpperCase()}</p>}

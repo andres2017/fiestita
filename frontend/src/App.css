@@ -353,12 +353,25 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 /* Organizer's own uploaded design (image/PDF/short video), shown instead of the
    generated hero when inv.custom_invite_active is on. Full-bleed edge-to-edge,
    breaking out of .inv-content's padding the same way .inv-hero-glass does. */
+/* align-self:center overrides the flex item's default stretch, so the pill sizes to its
+   own text (like the rest of .inv-badge) instead of spanning the full width. */
+.inv-custom-cover-badge { align-self: center; margin-bottom: 0; }
 .inv-custom-cover { margin: -2rem -1.25rem 0; background: #000; }
 .inv-custom-cover-image { width: 100%; display: block; }
 .inv-custom-cover-video { width: 100%; max-height: 80vh; display: block; background: #000; }
 .inv-custom-cover-pdf-wrap { padding: 1rem 1.25rem 0; background: none; }
 .inv-custom-cover-pdf { width: 100%; height: 70vh; border: 2px solid var(--inv-primary); border-radius: 1rem; display: block; background: #fff; }
 .inv-custom-cover-pdf-link { margin-top: 0.75rem; }
+
+.inv-custom-cover-scrollcue { text-align: center; padding: 0 1rem; }
+.inv-custom-cover-scrollcue-arrows { display: block; color: var(--inv-primary); animation: float 2s ease-in-out infinite; font-size: 0.9rem; }
+.inv-custom-cover-scrollcue-text {
+  margin: 0.5rem auto 0; max-width: 34ch; font-weight: 700; font-size: 0.85rem;
+  line-height: 1.5; color: var(--inv-text); opacity: 0.75;
+}
+@media (prefers-reduced-motion: reduce) {
+  .inv-custom-cover-scrollcue-arrows { animation: none; }
+}
 
 .inv-card {
   background: var(--inv-surface); border: 3px solid var(--inv-primary); border-radius: 1.5rem;

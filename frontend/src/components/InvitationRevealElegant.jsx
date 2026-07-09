@@ -43,15 +43,37 @@ const monogramOf = (label) => {
 };
 
 /**
- * One full seal face (rim + wax + engraved ring + die). Rendered three times
- * — an intact copy on top, and two pre-cracked halves hidden beneath it — so
- * the closed seal is seamless and the crack simply "appears" when the intact
- * copy vanishes.
+ * Scalloped seal silhouette — 19 rounded lobes (like a hand-pressed wax seal's
+ * rippled edge) with a subtle low-frequency wobble so it reads poured, not
+ * machine-cut. Emitted once at module load as a %-based clip-path polygon:
+ * percentages resolve against each layer's own box, so the rim / valley / body
+ * layers below can share this one shape at different insets and any seal size
+ * while staying perfectly concentric.
+ */
+const SEAL_SHAPE = (() => {
+  const POINTS = 200, LOBES = 19, DEPTH = 0.047, RADIUS = 47.6;
+  const pts = [];
+  for (let i = 0; i < POINTS; i++) {
+    const t = (i / POINTS) * 2 * Math.PI;
+    const wobble = 1 + 0.011 * Math.sin(3 * t + 1.7) + 0.007 * Math.sin(5 * t + 0.6);
+    const r = RADIUS * (1 - DEPTH + DEPTH * Math.cos(LOBES * t)) * wobble;
+    pts.push(`${(50 + r * Math.cos(t)).toFixed(2)}% ${(50 + r * Math.sin(t)).toFixed(2)}%`);
+  }
+  return `polygon(${pts.join(",")})`;
+})();
+
+/**
+ * One full seal face — beveled scalloped rim, pressed valley groove, satin wax
+ * body, engraved ring and monogram die. Rendered three times — an intact copy
+ * on top, and two pre-cracked halves hidden beneath it — so the closed seal is
+ * seamless and the crack simply "appears" when the intact copy vanishes.
  */
 const SealFace = ({ monogram, emoji }) => (
-  <span className="reveal-elegant-face" aria-hidden="true">
+  <span className="reveal-elegant-face" style={{ "--seal-shape": SEAL_SHAPE }} aria-hidden="true">
     <span className="reveal-elegant-wax-rim" />
+    <span className="reveal-elegant-wax-valley" />
     <span className="reveal-elegant-wax">
+      <span className="reveal-elegant-wax-sheen" />
       <span className="reveal-elegant-wax-ring" />
       <span className={`reveal-elegant-die${monogram ? "" : " reveal-elegant-die-emoji"}`}>
         {monogram || emoji}

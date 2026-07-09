@@ -56,6 +56,11 @@ export default function Landing() {
     <div className="landing">
       <nav className="landing-nav">
         <span className="landing-logo">🎈 Invitaciones Digitales Fiestita</span>
+        <div className="landing-nav-links">
+          <a href="#tematicas">Temáticas</a>
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#contacto">Contacto</a>
+        </div>
         <Link to="/crear" className="btn-primary-sm" data-testid="nav-create-btn">Crear invitación</Link>
       </nav>
 
@@ -82,10 +87,17 @@ export default function Landing() {
         </div>
         <div className="landing-hero-img animate-fade-up delay-5">
           <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?crop=entropy&cs=srgb&fm=jpg&q=85&w=900" alt="Celebración con confeti" />
+          <div className="landing-nowplaying liquid-glass" data-testid="landing-nowplaying">
+            <span className="landing-nowplaying-disc" aria-hidden="true" />
+            <span className="landing-nowplaying-info">
+              <span className="landing-nowplaying-title">Tu canción favorita</span>
+              <span className="landing-nowplaying-sub">🎵 sonando en tu invitación</span>
+            </span>
+          </div>
         </div>
       </header>
 
-      <section className="landing-themes">
+      <section className="landing-themes" id="tematicas">
         <h2>Elige tu temática favorita</h2>
         <p className="landing-themes-sub">{THEME_LIST.length} temáticas para cumpleaños, bodas, partidos y más</p>
 
@@ -125,7 +137,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landing-steps">
+      <section className="landing-steps" id="como-funciona">
         <h2>¿Cómo funciona?</h2>
         <div className="steps-grid">
           <div className="step-card"><span className="step-num">1</span><h3>🎨 Elige y personaliza</h3><p>Escoge el tipo de evento y la temática, y llena los datos: nombre, fecha, lugar y mensaje.</p></div>
@@ -135,7 +147,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landing-help">
+      <section className="landing-help" id="contacto">
         <div className="landing-help-card">
           <h2>¿Prefieres que te la hagamos nosotros? 💛</h2>
           <p>Escríbenos por WhatsApp y te ayudamos a crear tu invitación paso a paso, sin importar la ocasión.</p>

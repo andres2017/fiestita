@@ -9,6 +9,8 @@ import logging
 import httpx
 import hashlib
 import secrets
+import boto3
+from botocore.config import Config as BotoConfig
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
@@ -63,6 +65,30 @@ WOMPI_INTEGRITY_SECRET = os.environ.get('WOMPI_INTEGRITY_SECRET', '')
 INVITATION_PRICE_COP = int(os.environ.get('INVITATION_PRICE_COP', '59000'))
 PAYMENT_REFERENCE_PREFIX = "FIESTITA-"
 
+# --- Almacenamiento de archivos (Cloudflare R2) ------------------------------
+# Render no ofrece disco persistente por defecto: cualquier archivo escrito en
+# el disco local del servicio se pierde en cada deploy/reinicio. Los videos y
+# fotos se guardan en un bucket de R2 (API compatible con S3) para que
+# sobrevivan a los despliegues.
+R2_ACCOUNT_ID = os.environ.get('R2_ACCOUNT_ID', '')
+R2_ACCESS_KEY_ID = os.environ.get('R2_ACCESS_KEY_ID', '')
+R2_SECRET_ACCESS_KEY = os.environ.get('R2_SECRET_ACCESS_KEY', '')
+R2_BUCKET_NAME = os.environ.get('R2_BUCKET_NAME', '')
+R2_PUBLIC_URL = os.environ.get('R2_PUBLIC_URL', '').rstrip('/')
+
+r2_client = None
+if R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
+    r2_client = boto3.client(
+        "s3",
+        endpoint_url=f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com",
+        aws_access_key_id=R2_ACCESS_KEY_ID,
+        aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+        config=BotoConfig(signature_version="s3v4"),
+        region_name="auto",
+    )
+
+# Rutas locales conservadas solo para servir archivos subidos antes de la
+# migración a R2 (si el disco local del deploy actual todavía los tiene).
 UPLOADS_DIR = ROOT_DIR / "uploads"
 VIDEOS_DIR = UPLOADS_DIR / "videos"
 VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,7 +102,8 @@ ALLOWED_VIDEO_TYPES = {
     "video/quicktime": ".mov",
     "video/ogg": ".ogv",
 }
-VIDEO_URL_RE = re.compile(r"^/uploads/videos/[a-f0-9]{32}\.(mp4|webm|mov|ogv)$")
+VIDEO_KEY_RE = re.compile(r"^videos/[a-f0-9]{32}\.(mp4|webm|mov|ogv)$")
+LEGACY_VIDEO_URL_RE = re.compile(r"^/uploads/videos/[a-f0-9]{32}\.(mp4|webm|mov|ogv)$")
 
 MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8MB
 MAX_PHOTOS = 3
@@ -85,7 +112,8 @@ ALLOWED_PHOTO_TYPES = {
     "image/png": ".png",
     "image/webp": ".webp",
 }
-PHOTO_URL_RE = re.compile(r"^/uploads/photos/[a-f0-9]{32}\.(jpg|png|webp)$")
+PHOTO_KEY_RE = re.compile(r"^photos/[a-f0-9]{32}\.(jpg|png|webp)$")
+LEGACY_PHOTO_URL_RE = re.compile(r"^/uploads/photos/[a-f0-9]{32}\.(jpg|png|webp)$")
 
 YOUTUBE_URL_RE = re.compile(r"^https://(www\.)?(youtube\.com/(watch\?v=|shorts/)|youtu\.be/)[\w-]+")
 SPOTIFY_URL_RE = re.compile(r"^https://open\.spotify\.com/(track|album|playlist)/[\w]+")
@@ -106,15 +134,28 @@ def _is_valid_script_url(url: str) -> bool:
 
 
 def _is_valid_video_url(url: str) -> bool:
-    """video_url must point at a file this server generated via /uploads/video, so it can't
-    be used to smuggle an arbitrary external or javascript: URL into the <video> src."""
-    return url == "" or bool(VIDEO_URL_RE.match(url))
+    """video_url must point at a file this server generated via /uploads/video (now stored in
+    R2, previously on local disk), so it can't be used to smuggle an arbitrary external or
+    javascript: URL into the <video> src."""
+    if url == "":
+        return True
+    if R2_PUBLIC_URL and url.startswith(R2_PUBLIC_URL + "/"):
+        return bool(VIDEO_KEY_RE.match(url[len(R2_PUBLIC_URL) + 1:]))
+    return bool(LEGACY_VIDEO_URL_RE.match(url))
 
 
 def _is_valid_photo_urls(urls: list) -> bool:
-    """Each photo_url must point at a file this server generated via /uploads/photo, and
-    there can be at most MAX_PHOTOS of them."""
-    return len(urls) <= MAX_PHOTOS and all(PHOTO_URL_RE.match(u) for u in urls)
+    """Each photo_url must point at a file this server generated via /uploads/photo (now stored
+    in R2, previously on local disk), and there can be at most MAX_PHOTOS of them."""
+    if len(urls) > MAX_PHOTOS:
+        return False
+
+    def _one(u):
+        if R2_PUBLIC_URL and u.startswith(R2_PUBLIC_URL + "/"):
+            return bool(PHOTO_KEY_RE.match(u[len(R2_PUBLIC_URL) + 1:]))
+        return bool(LEGACY_PHOTO_URL_RE.match(u))
+
+    return all(_one(u) for u in urls)
 
 
 def _is_valid_song_url(url: str) -> bool:
@@ -292,6 +333,8 @@ async def upload_video(request: Request, file: UploadFile = File(...)):
     ext = ALLOWED_VIDEO_TYPES.get(file.content_type)
     if not ext:
         raise HTTPException(status_code=400, detail="Formato de video no soportado. Usa MP4, WebM, MOV u OGG.")
+    if not r2_client or not R2_BUCKET_NAME or not R2_PUBLIC_URL:
+        raise HTTPException(status_code=503, detail="Almacenamiento de archivos no configurado")
 
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > MAX_VIDEO_BYTES + 5_000_000:
@@ -301,11 +344,10 @@ async def upload_video(request: Request, file: UploadFile = File(...)):
     if len(contents) > MAX_VIDEO_BYTES:
         raise HTTPException(status_code=413, detail="El video no puede pesar más de 50MB.")
 
-    filename = f"{uuid.uuid4().hex}{ext}"
-    with open(VIDEOS_DIR / filename, "wb") as f:
-        f.write(contents)
+    key = f"videos/{uuid.uuid4().hex}{ext}"
+    r2_client.put_object(Bucket=R2_BUCKET_NAME, Key=key, Body=contents, ContentType=file.content_type)
 
-    return {"video_url": f"/uploads/videos/{filename}"}
+    return {"video_url": f"{R2_PUBLIC_URL}/{key}"}
 
 
 @api_router.post("/uploads/photo")
@@ -313,6 +355,8 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
     ext = ALLOWED_PHOTO_TYPES.get(file.content_type)
     if not ext:
         raise HTTPException(status_code=400, detail="Formato de foto no soportado. Usa JPG, PNG o WEBP.")
+    if not r2_client or not R2_BUCKET_NAME or not R2_PUBLIC_URL:
+        raise HTTPException(status_code=503, detail="Almacenamiento de archivos no configurado")
 
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > MAX_PHOTO_BYTES + 1_000_000:
@@ -322,11 +366,10 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
     if len(contents) > MAX_PHOTO_BYTES:
         raise HTTPException(status_code=413, detail="La foto no puede pesar más de 8MB.")
 
-    filename = f"{uuid.uuid4().hex}{ext}"
-    with open(PHOTOS_DIR / filename, "wb") as f:
-        f.write(contents)
+    key = f"photos/{uuid.uuid4().hex}{ext}"
+    r2_client.put_object(Bucket=R2_BUCKET_NAME, Key=key, Body=contents, ContentType=file.content_type)
 
-    return {"photo_url": f"/uploads/photos/{filename}"}
+    return {"photo_url": f"{R2_PUBLIC_URL}/{key}"}
 
 
 @api_router.get("/invitations/{inv_id}/rsvps")

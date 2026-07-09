@@ -8,6 +8,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8000').rstr
 API = f"{BASE_URL}/api"
 WOMPI_EVENTS_SECRET = os.environ.get('WOMPI_EVENTS_SECRET', '')
 ADMIN_KEY = os.environ.get('ADMIN_KEY', '')
+R2_PUBLIC_URL = os.environ.get('R2_PUBLIC_URL', 'https://pub-55ae0f449ef94622ad724f3ba6fa89cc.r2.dev')
 
 
 def _approve_payment(checkout, tx_id):
@@ -136,6 +137,21 @@ class TestCreate:
             "event_date": "2026-12-01", "event_time": "10:00", "photo_urls": fake_urls,
         })
         assert r.status_code == 400
+
+    def test_create_accepts_r2_photo_url_rejects_external(self):
+        r2_url = f"{R2_PUBLIC_URL}/photos/{'a' * 32}.jpg"
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_FotoR2", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00", "photo_urls": [r2_url],
+        })
+        assert r.status_code == 200, r.text
+
+        r2 = requests.post(f"{API}/invitations", json={
+            "theme": "espacio", "child_name": "TEST_FotoAjena", "age": 5,
+            "event_date": "2026-12-01", "event_time": "10:00",
+            "photo_urls": [f"https://evil.com/photos/{'a' * 32}.jpg"],
+        })
+        assert r2.status_code == 400
 
     def test_create_rejects_gift_registry_javascript_url(self):
         r = requests.post(f"{API}/invitations", json={

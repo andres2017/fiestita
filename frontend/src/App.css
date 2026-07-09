@@ -608,35 +608,187 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-dark .inv-btn-elegant:hover { color: var(--inv-bg); }
 .inv-btn-elegant:focus-visible { outline: 2px solid var(--inv-accent); outline-offset: 3px; }
 
-/* --- Song player --- */
+/* --- Song player: abstract vinyl + orbit ring, all colors derived from theme vars --- */
+.inv-song-stage {
+  position: relative; display: grid; place-items: center;
+  width: 12.5rem; height: 12.5rem; max-width: 100%;
+  margin: 0.5rem auto 1.15rem;
+}
+
+/* Soft glow behind the record; breathes while playing */
+.inv-song-halo {
+  grid-area: 1 / 1; width: 9.5rem; height: 9.5rem; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--inv-primary) 55%, transparent) 0%, transparent 68%);
+  filter: blur(16px); opacity: 0.35; pointer-events: none;
+  transition: opacity 0.8s ease-out;
+}
+.inv-song-stage:hover .inv-song-halo { opacity: 0.55; }
+.inv-song-stage.is-playing .inv-song-halo { opacity: 0.8; animation: inv-song-breathe 2.8s ease-in-out infinite; }
+@keyframes inv-song-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.16); } }
+
+/* Generated vinyl: grooves via repeating gradient over a text-color body, so it
+   reads as a record on light AND dark themes. Spins while playing, freezes on pause. */
+.inv-song-disc {
+  grid-area: 1 / 1; position: relative; width: 10.5rem; height: 10.5rem; border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 5px, color-mix(in srgb, var(--inv-bg) 32%, transparent) 5px 6px),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--inv-text) 88%, var(--inv-primary)) 34%, color-mix(in srgb, var(--inv-text) 70%, var(--inv-bg)) 100%);
+  border: 1px solid color-mix(in srgb, var(--inv-primary) 40%, transparent);
+  box-shadow: 0 22px 44px -22px rgba(0, 0, 0, 0.55), inset 0 0 0 1px color-mix(in srgb, var(--inv-bg) 18%, transparent);
+  overflow: hidden;
+  animation: inv-song-spin 5s linear infinite; animation-play-state: paused;
+  transition: opacity 0.5s ease-out;
+}
+.inv-song-stage.is-playing .inv-song-disc { animation-play-state: running; }
+.inv-song-stage.is-loading .inv-song-disc { opacity: 0.45; }
+/* Light sheen wedges — the asymmetry that makes the spin visible */
+.inv-song-disc::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(from 205deg,
+    transparent 0deg 12deg,
+    color-mix(in srgb, var(--inv-bg) 20%, transparent) 42deg,
+    transparent 78deg 192deg,
+    color-mix(in srgb, var(--inv-bg) 12%, transparent) 222deg,
+    transparent 252deg 360deg);
+}
+@keyframes inv-song-spin { to { transform: rotate(360deg); } }
+
+/* Dashed orbit ring: loading spinner while the track loads, slow counter-spin while playing */
+.inv-song-orbit {
+  grid-area: 1 / 1; width: 100%; height: 100%; display: block; pointer-events: none;
+  color: color-mix(in srgb, var(--inv-accent) 70%, var(--inv-primary));
+  animation: inv-song-spin 26s linear infinite reverse; animation-play-state: paused;
+}
+.inv-song-stage.is-playing .inv-song-orbit { animation-play-state: running; }
+.inv-song-stage.is-loading .inv-song-orbit { animation: inv-song-spin 1.6s linear infinite; }
+.inv-song-orbit-dashes {
+  fill: none; stroke: currentColor; stroke-width: 1.5;
+  stroke-dasharray: 2.5 9.5; stroke-linecap: round; opacity: 0.5;
+  transition: opacity 0.5s ease-out;
+}
+.inv-song-stage.is-playing .inv-song-orbit-dashes { opacity: 0.85; }
+.inv-song-stage.is-loading .inv-song-orbit-dashes { opacity: 0.18; }
+.inv-song-orbit-arc {
+  fill: none; stroke: currentColor; stroke-width: 2.5;
+  stroke-dasharray: 84 519; stroke-linecap: round; opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+.inv-song-stage.is-loading .inv-song-orbit-arc { opacity: 0.9; }
+
+/* Floating notes, only while playing */
+.inv-song-note {
+  position: absolute; font-size: 1rem; line-height: 1;
+  color: color-mix(in srgb, var(--inv-accent) 75%, var(--inv-primary));
+  opacity: 0; pointer-events: none; user-select: none;
+}
+.inv-song-note-1 { top: 14%; left: 12%; }
+.inv-song-note-2 { top: 10%; right: 14%; font-size: 1.2rem; }
+.inv-song-note-3 { bottom: 16%; right: 6%; }
+.inv-song-stage.is-playing .inv-song-note { animation: inv-song-float 2.8s ease-in-out infinite; }
+.inv-song-stage.is-playing .inv-song-note-2 { animation-delay: 0.9s; animation-duration: 3.2s; }
+.inv-song-stage.is-playing .inv-song-note-3 { animation-delay: 1.7s; animation-duration: 2.6s; }
+@keyframes inv-song-float {
+  0% { opacity: 0; transform: translateY(8px) rotate(-8deg) scale(0.85); }
+  25% { opacity: 0.85; }
+  60% { opacity: 0.5; }
+  100% { opacity: 0; transform: translateY(-30px) rotate(10deg) scale(1.05); }
+}
+
+/* Play/pause button = the record label at the center of the vinyl */
 .inv-song-playbtn {
-  display: grid; place-items: center; width: 4.5rem; height: 4.5rem; margin: 0.25rem auto 1.1rem;
-  border-radius: 50%; border: 1px solid var(--inv-primary); background: var(--inv-primary);
-  color: var(--inv-surface); cursor: pointer; box-shadow: 0 14px 28px -16px color-mix(in srgb, var(--inv-primary) 70%, transparent);
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  grid-area: 1 / 1; position: relative; z-index: 2;
+  display: grid; place-items: center; width: 4.75rem; height: 4.75rem; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--inv-surface) 45%, var(--inv-primary));
+  background:
+    radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--inv-surface) 30%, transparent) 0%, transparent 58%),
+    var(--inv-primary);
+  color: var(--inv-surface); cursor: pointer;
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--inv-surface) 16%, transparent),
+    0 14px 30px -14px color-mix(in srgb, var(--inv-primary) 85%, transparent);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease-out, opacity 0.3s ease-out;
 }
-.inv-song-playbtn:hover:not(:disabled) { transform: scale(1.05); }
-.inv-song-playbtn:focus-visible { outline: 2px solid var(--inv-accent); outline-offset: 3px; }
-.inv-song-playbtn:disabled { opacity: 0.45; cursor: wait; }
+.inv-song-playbtn:hover:not(:disabled) { transform: scale(1.06); }
+.inv-song-playbtn:active:not(:disabled) { transform: scale(0.93); }
+.inv-song-playbtn:focus-visible { outline: 2px solid var(--inv-accent); outline-offset: 4px; }
+.inv-song-playbtn:disabled { opacity: 0.55; cursor: wait; }
+.inv-song-playbtn.is-playing {
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--inv-surface) 16%, transparent),
+    0 0 26px 0 color-mix(in srgb, var(--inv-accent) 40%, transparent),
+    0 14px 30px -14px color-mix(in srgb, var(--inv-primary) 85%, transparent);
+}
+/* Sonar ping ring while playing */
+.inv-song-playbtn::after {
+  content: ""; position: absolute; inset: -3px; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--inv-accent) 65%, transparent);
+  opacity: 0; pointer-events: none;
+}
+.inv-song-playbtn.is-playing::after { animation: inv-song-ping 2.4s cubic-bezier(0.2, 0.6, 0.4, 1) infinite; }
+@keyframes inv-song-ping { 0% { transform: scale(0.9); opacity: 0.8; } 65%, 100% { transform: scale(1.5); opacity: 0; } }
+
+/* Play <-> pause icon crossfade (both stacked, toggled by .is-playing) */
 .inv-song-playbtn-icon { display: grid; place-items: center; }
+.inv-song-ic { grid-area: 1 / 1; transition: opacity 0.22s ease-out, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.inv-song-ic-play { transform: translateX(1px) scale(1) rotate(0deg); opacity: 1; }
+.inv-song-ic-pause { transform: scale(0.5) rotate(-90deg); opacity: 0; }
+.inv-song-playbtn.is-playing .inv-song-ic-play { transform: translateX(1px) scale(0.5) rotate(90deg); opacity: 0; }
+.inv-song-playbtn.is-playing .inv-song-ic-pause { transform: scale(1) rotate(0deg); opacity: 1; }
 
-.inv-song-bars { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 22px; margin-bottom: 0.9rem; }
+/* Equalizer: 7 gradient bars, organic phases while playing, static waveform at rest */
+.inv-song-bars { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 26px; margin-bottom: 0.9rem; }
 .inv-song-bars span {
-  display: block; width: 3px; height: 6px; border-radius: 2px;
-  background: color-mix(in srgb, var(--inv-primary) 65%, transparent);
-  transition: height 0.2s ease-out;
+  display: block; width: 4px; border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--inv-accent) 60%, var(--inv-primary)) 0%, var(--inv-primary) 100%);
+  opacity: 0.55; transition: height 0.3s ease-out, opacity 0.3s ease-out;
 }
-.inv-song-bars.is-playing span { animation: inv-song-bar-bounce 1s ease-in-out infinite; }
-.inv-song-bars.is-playing span:nth-child(1) { animation-delay: -0.9s; }
-.inv-song-bars.is-playing span:nth-child(2) { animation-delay: -0.6s; }
-.inv-song-bars.is-playing span:nth-child(3) { animation-delay: -0.3s; }
-.inv-song-bars.is-playing span:nth-child(4) { animation-delay: -1.1s; }
-@keyframes inv-song-bar-bounce { 0%, 100% { height: 6px; } 50% { height: 20px; } }
-@media (prefers-reduced-motion: reduce) {
-  .inv-song-bars.is-playing span { animation: none; height: 14px; }
-}
+.inv-song-bars span:nth-child(1) { height: 5px; }
+.inv-song-bars span:nth-child(2) { height: 10px; }
+.inv-song-bars span:nth-child(3) { height: 7px; }
+.inv-song-bars span:nth-child(4) { height: 14px; }
+.inv-song-bars span:nth-child(5) { height: 7px; }
+.inv-song-bars span:nth-child(6) { height: 10px; }
+.inv-song-bars span:nth-child(7) { height: 5px; }
+.inv-song-bars.is-playing span { opacity: 0.95; animation: inv-song-bar-bounce 1s ease-in-out infinite; }
+.inv-song-bars.is-playing span:nth-child(1) { animation-duration: 0.9s;  animation-delay: -0.2s; }
+.inv-song-bars.is-playing span:nth-child(2) { animation-duration: 1.15s; animation-delay: -0.6s; }
+.inv-song-bars.is-playing span:nth-child(3) { animation-duration: 0.8s;  animation-delay: -0.9s; }
+.inv-song-bars.is-playing span:nth-child(4) { animation-duration: 1.3s;  animation-delay: -0.35s; }
+.inv-song-bars.is-playing span:nth-child(5) { animation-duration: 0.85s; animation-delay: -1.1s; }
+.inv-song-bars.is-playing span:nth-child(6) { animation-duration: 1.05s; animation-delay: -0.75s; }
+.inv-song-bars.is-playing span:nth-child(7) { animation-duration: 0.95s; animation-delay: -0.5s; }
+@keyframes inv-song-bar-bounce { 0%, 100% { height: 5px; } 50% { height: 24px; } }
 
-.inv-song-hint { margin: 0; text-align: center; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px; opacity: 0.6; }
+/* Status line: spaced small caps + pulsing live dot while playing */
+.inv-song-hint {
+  margin: 0; text-align: center; font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 2.5px; text-transform: uppercase; opacity: 0.55;
+  transition: opacity 0.4s ease-out, color 0.4s ease-out;
+}
+.inv-song-hint.is-live { color: var(--inv-primary); opacity: 0.9; }
+.inv-song-hint.is-live::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; margin-right: 0.6em; vertical-align: 8%;
+  animation: inv-song-blink 1.5s ease-in-out infinite;
+}
+@keyframes inv-song-blink { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-song-stage .inv-song-disc,
+  .inv-song-stage .inv-song-orbit,
+  .inv-song-stage.is-loading .inv-song-orbit,
+  .inv-song-stage.is-playing .inv-song-halo,
+  .inv-song-playbtn.is-playing::after,
+  .inv-song-bars.is-playing span,
+  .inv-song-hint.is-live::before { animation: none; }
+  .inv-song-note { display: none; }
+  .inv-song-playbtn { transition: box-shadow 0.3s ease-out, opacity 0.3s ease-out; }
+  .inv-song-playbtn:hover:not(:disabled), .inv-song-playbtn:active:not(:disabled) { transform: none; }
+  .inv-song-ic { transition: opacity 0.22s ease-out; }
+  /* still differentiate playing vs paused, just without movement */
+  .inv-song-bars.is-playing span:nth-child(odd) { height: 9px; }
+  .inv-song-bars.is-playing span:nth-child(even) { height: 17px; }
+}
 .inv-song-hidden-mount { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 
 /* --- Gift registry --- */

@@ -192,6 +192,17 @@ export const InvitationView = ({ inv, preview = false }) => {
           <InvitationPhotoGallery photos={inv.photo_urls.map(mediaUrl)} />
         )}
 
+        {/* MESSAGE — categories with the elegant hero already show this up top
+            (inside the merged hero card via InvitationQuickInfoElegant), so it only
+            gets its own section here for the rest, right under the photos. */}
+        {!ELEGANT_HERO_CATEGORIES.has(theme.category) && inv.message && (
+          <section className="inv-card inv-card-elegant" data-testid="inv-message-card">
+            <h2 className="inv-section-title">💌 Mensaje personal</h2>
+            <div className="inv-elegant-divider" aria-hidden="true"><span>✦</span></div>
+            <p className="inv-elegant-note" data-testid="inv-message">{inv.message}</p>
+          </section>
+        )}
+
         {/* SONG */}
         {inv.song_url && <InvitationSongPlayer url={inv.song_url} />}
 
@@ -224,12 +235,6 @@ export const InvitationView = ({ inv, preview = false }) => {
             <span className="inv-detail-icon">🗺️</span>
             <div><strong>LUGAR</strong><p>{inv.venue || "Por definir"}</p><p className="inv-address">{inv.address}</p></div>
           </div>
-          {inv.message && (
-            <div className="inv-detail" data-testid="inv-message">
-              <span className="inv-detail-icon">💌</span>
-              <div><strong>MENSAJE</strong><p>{inv.message}</p></div>
-            </div>
-          )}
           <a href={calendarUrl(inv)} target="_blank" rel="noopener noreferrer" className="inv-btn inv-btn-outline" data-testid="inv-calendar-btn">
             📅 Agendar en mi calendario
           </a>

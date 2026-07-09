@@ -162,28 +162,38 @@ export const InvitationSongPlayer = ({ url }) => {
       <h2 className="inv-section-title">🎵 Nuestra canción</h2>
       <div className="inv-elegant-divider" aria-hidden="true"><span>✦</span></div>
 
-      <button
-        type="button"
-        className={`inv-song-playbtn ${isPlaying ? "is-playing" : ""}`}
-        onClick={toggle}
-        disabled={!isReady}
-        aria-label={isPlaying ? "Pausar canción" : "Reproducir canción"}
-        data-testid="inv-song-toggle"
-      >
-        <span className="inv-song-playbtn-icon" aria-hidden="true">
-          {isPlaying ? (
-            <svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" /><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" /></svg>
-          ) : (
-            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
-          )}
-        </span>
-      </button>
+      {/* Vinyl stage: glow halo + spinning record + orbit ring, play button as the record label */}
+      <div className={`inv-song-stage ${!isReady ? "is-loading" : ""} ${isPlaying ? "is-playing" : ""}`}>
+        <span className="inv-song-halo" aria-hidden="true" />
+        <div className="inv-song-disc" aria-hidden="true" />
+        <svg className="inv-song-orbit" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+          <circle className="inv-song-orbit-dashes" cx="100" cy="100" r="96" />
+          <circle className="inv-song-orbit-arc" cx="100" cy="100" r="96" />
+        </svg>
+        <span className="inv-song-note inv-song-note-1" aria-hidden="true">♪</span>
+        <span className="inv-song-note inv-song-note-2" aria-hidden="true">♫</span>
+        <span className="inv-song-note inv-song-note-3" aria-hidden="true">♪</span>
 
-      <div className={`inv-song-bars ${isPlaying ? "is-playing" : ""}`} aria-hidden="true">
-        <span /><span /><span /><span />
+        <button
+          type="button"
+          className={`inv-song-playbtn ${isPlaying ? "is-playing" : ""}`}
+          onClick={toggle}
+          disabled={!isReady}
+          aria-label={isPlaying ? "Pausar canción" : "Reproducir canción"}
+          data-testid="inv-song-toggle"
+        >
+          <span className="inv-song-playbtn-icon" aria-hidden="true">
+            <svg className="inv-song-ic inv-song-ic-play" viewBox="0 0 24 24" width="24" height="24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
+            <svg className="inv-song-ic inv-song-ic-pause" viewBox="0 0 24 24" width="24" height="24"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" /><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" /></svg>
+          </span>
+        </button>
       </div>
 
-      <p className="inv-song-hint" data-testid="inv-song-hint">
+      <div className={`inv-song-bars ${isPlaying ? "is-playing" : ""}`} aria-hidden="true">
+        <span /><span /><span /><span /><span /><span /><span />
+      </div>
+
+      <p className={`inv-song-hint ${isPlaying ? "is-live" : ""}`} data-testid="inv-song-hint">
         {!isReady ? "Cargando…" : isPlaying ? "Reproduciendo" : "Toca para reproducir"}
       </p>
 

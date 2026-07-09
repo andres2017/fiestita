@@ -847,7 +847,12 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
    longer sentences (novena, bautizo) from feeling like a wall of text. */
 .inv-hero-elegant-name {
   margin: 0 0 1.15rem; font-family: var(--inv-font); color: var(--inv-primary);
-  font-size: calc(clamp(2.5rem, 12vw, 3.8rem) * var(--inv-scale, 1));
+  /* --inv-scale ranges ~0.8-1.4 across themes; applying it in full on top of
+     an already-large hero size made script fonts (boda 1.4, cielito 1.35)
+     balloon and wrap across many lines. Damp it to half its deviation from 1
+     so high-scale themes stay legible/contained without flattening the
+     per-theme sizing intent entirely. */
+  font-size: calc(clamp(2.2rem, 10vw, 3.4rem) * (1 + (var(--inv-scale, 1) - 1) * 0.5));
   line-height: 1.18; text-wrap: balance; overflow-wrap: anywhere;
 }
 .inv-hero-elegant-dark .inv-hero-elegant-name { color: color-mix(in srgb, var(--inv-primary) 88%, white); }
@@ -892,7 +897,7 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 
 @media (max-width: 360px) {
   .inv-hero-elegant-corner { width: 34px; height: 34px; }
-  .inv-hero-elegant-name { font-size: calc(clamp(2.1rem, 13vw, 3rem) * var(--inv-scale, 1)); }
+  .inv-hero-elegant-name { font-size: calc(clamp(1.8rem, 11vw, 2.6rem) * (1 + (var(--inv-scale, 1) - 1) * 0.5)); }
 }
 
 /* ===== HERO — ELEGANT, ENERGETIC VARIANT (mundial, tardeo, gloria — set via

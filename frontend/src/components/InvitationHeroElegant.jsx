@@ -30,22 +30,24 @@ import { motion, useReducedMotion } from "framer-motion";
  * handling are identical for every category — only the ornament mood
  * changes, never the layout contract.
  *
- * Copy-field mapping (all three are rendered AS-IS, verbatim, never
- * modified — only their visual role changes):
- *   kicker (small, top)   copy.badge(dispInv)    short label in every theme
- *                          (for boda it's literally just the names; for the
- *                          other five it's "[event] de/donde [name]")
+ * Copy-field mapping:
+ *   kicker (small, top)   fixed phrase ("Tienes una invitación especial") —
+ *                          NOT copy.badge(dispInv). Earlier version reused
+ *                          badge here, but badge already contains the name
+ *                          in every theme, so it duplicated the name that
+ *                          also appears in the giant title right below —
+ *                          read as a repetition bug, not a lead-in/payoff
+ *                          structure. A name-free kicker fixes that while
+ *                          still echoing the reference's "Nos complace
+ *                          invitarte a:" framing line.
  *   name   (GIANT, star)  copy.title(dispInv)    the full per-category
- *                          announcement sentence — already the field the
- *                          current production hero trusts for its <h1>, so
- *                          reusing it here is a presentation upgrade, not a
- *                          content change. Showing the plain name first in
- *                          the kicker, then this sentence huge right below,
- *                          is what removes the "run-on sentence" complaint:
- *                          the names are no longer the ONLY place to find
- *                          them, and they're never buried without a lead-in.
+ *                          announcement sentence, rendered AS-IS/verbatim —
+ *                          already the field the plain production hero
+ *                          trusts for its <h1>, so reusing it here is a
+ *                          presentation upgrade, not a content change.
  *   sub    (calm support) copy.subtitle(dispInv) the warm/tagline sentence,
- *                          echoing the reference's italic paragraph
+ *                          echoing the reference's italic paragraph,
+ *                          rendered AS-IS/verbatim
  *
  * `emoji` (theme.emoji) is not string-parsed out of any copy field — it's
  * rendered on its own as a small ringed medallion, standing in for the
@@ -170,7 +172,7 @@ export const InvitationHeroElegant = ({
 
       <div className="inv-hero-elegant-inner">
         <motion.p className="inv-hero-elegant-kicker" data-testid="inv-badge" variants={upV}>
-          {copy.badge(dispInv)}
+          Tienes una invitación especial
         </motion.p>
 
         <motion.h1 className="inv-hero-elegant-name" data-testid="inv-title" variants={nameV}>

@@ -199,6 +199,14 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .palette-swatch:hover { transform: translateY(-2px) scale(1.06); }
 .palette-swatch.active { outline: 3px solid var(--l-secondary); outline-offset: 2px; }
 
+.font-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0.4rem; }
+.font-chip {
+  border: 2px solid #1F2937; background: #fff; border-radius: 9999px; padding: 0.5rem 1.1rem;
+  cursor: pointer; font-size: 1rem; transition: transform 0.15s ease-out, background-color 0.15s ease-out;
+}
+.font-chip:hover { transform: translateY(-2px); }
+.font-chip.active { background: var(--l-secondary); color: #fff; box-shadow: 3px 3px 0 rgba(31,41,55,0.8); }
+
 .theme-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 1.25rem; }
 .theme-chip {
   border: 2px solid #1F2937; background: #fff; border-radius: 9999px; padding: 0.45rem 0.9rem;
@@ -251,6 +259,15 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 }
 .itinerary-remove:hover { color: #EF4444; border-color: #EF4444; }
 .itinerary-add-btn { padding: 0.55rem 1.1rem; font-size: 0.85rem; }
+
+.custom-invite-field { border: 2px dashed #D1D5DB; border-radius: 1rem; padding: 1rem; }
+.custom-invite-preview { display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+.custom-invite-thumb { max-width: 100%; max-height: 220px; border-radius: 0.85rem; border: 2px solid #D1D5DB; display: block; background: #000; }
+.custom-invite-pdf-chip {
+  display: inline-block; padding: 0.5rem 1rem; border-radius: 9999px; border: 2px solid #1F2937;
+  font-weight: 800; font-size: 0.85rem; text-decoration: none; color: inherit;
+}
+.custom-invite-active-toggle { margin-top: 0.4rem; }
 
 .advanced { margin: 0.5rem 0 1.5rem; border: 2px dashed #D1D5DB; border-radius: 1rem; padding: 0.75rem 1rem; }
 .advanced summary { cursor: pointer; font-weight: 800; font-size: 0.9rem; color: #4B5563; }
@@ -332,6 +349,16 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-fullname { font-weight: 800; letter-spacing: 1.5px; font-size: 0.85rem; opacity: 0.85; margin: 0 0 0.5rem; }
 .inv-subtitle { font-family: var(--inv-font); font-size: calc(1.1rem * var(--inv-scale)); color: var(--inv-accent); margin: 0; }
 .inv-arrows { margin-top: 1.5rem; color: var(--inv-primary); animation: float 2s ease-in-out infinite; font-size: 0.9rem; }
+
+/* Organizer's own uploaded design (image/PDF/short video), shown instead of the
+   generated hero when inv.custom_invite_active is on. Full-bleed edge-to-edge,
+   breaking out of .inv-content's padding the same way .inv-hero-glass does. */
+.inv-custom-cover { margin: -2rem -1.25rem 0; background: #000; }
+.inv-custom-cover-image { width: 100%; display: block; }
+.inv-custom-cover-video { width: 100%; max-height: 80vh; display: block; background: #000; }
+.inv-custom-cover-pdf-wrap { padding: 1rem 1.25rem 0; background: none; }
+.inv-custom-cover-pdf { width: 100%; height: 70vh; border: 2px solid var(--inv-primary); border-radius: 1rem; display: block; background: #fff; }
+.inv-custom-cover-pdf-link { margin-top: 0.75rem; }
 
 .inv-card {
   background: var(--inv-surface); border: 3px solid var(--inv-primary); border-radius: 1.5rem;
@@ -977,3 +1004,92 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 @media (max-width: 360px) {
   .inv-hero-glass-card { padding: 2.2rem 1.1rem 1.7rem; }
 }
+
+/* ===== QUICK INFO ELEGANTE (InvitationQuickInfoElegant.jsx) =====
+   Rendered as `children` of InvitationHeroElegant — INSIDE .inv-hero-glass-card,
+   right after its date line and divider — so this is a continuation of the
+   hero's own card, not a second card. (An earlier revision gave this its own
+   section+card+atmosphere with a negative-margin trick to butt them together;
+   the founder flagged that it still visually read as two separate cards, so
+   this now merges into one card structurally instead.) No independent
+   background/border/blur here — it inherits the hero card's glass surface.
+   Colors still color-mix() from --inv-primary/--inv-accent/--inv-soft, same
+   rule as the hero, so it holds up across every palette. */
+.inv-quickinfo { margin-top: 0.2rem; }
+
+/* Personal host message — same register as .inv-hero-glass-sub, and like
+   every other free-text host note on this page (.inv-arrive-text,
+   .inv-elegant-note) line breaks the host typed are preserved. */
+.inv-quickinfo-message {
+  margin: 0 auto 1.6rem; max-width: 36ch; font-family: 'Playfair Display', serif;
+  font-style: italic; font-weight: 500; font-size: 1rem; line-height: 1.7;
+  color: #fff; opacity: 0.88; white-space: pre-line;
+}
+
+/* FECHA / LUGAR: auto-fit lets the two blocks sit side by side once there's
+   room for both (~392px+ inner width) and stack full-width on real phones
+   (390px test case keeps them stacked, which stays comfortable for long
+   addresses) — no manual breakpoint needed either way. A lone block (only
+   FECHA, or only LUGAR) always spans the full row. */
+.inv-quickinfo-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1.4rem 1rem; margin: 0 0 1.6rem;
+}
+.inv-quickinfo-block { min-width: 0; }
+.inv-quickinfo-label {
+  display: block; margin: 0 0 0.4rem; font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 600;
+  font-size: 0.64rem; letter-spacing: 0.24em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--inv-accent) 85%, white);
+}
+.inv-quickinfo-value {
+  margin: 0 0 0.3rem; font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 600;
+  font-size: 0.92rem; line-height: 1.45; color: #fff; overflow-wrap: anywhere;
+}
+.inv-quickinfo-sub {
+  margin: 0; font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 500;
+  font-size: 0.78rem; line-height: 1.4; color: #fff; opacity: 0.65; overflow-wrap: anywhere;
+}
+
+.inv-quickinfo-punctual {
+  margin: 0 0 1.6rem; font-family: 'Playfair Display', serif; font-style: italic;
+  font-weight: 500; font-size: 0.8rem; color: #fff; opacity: 0.6;
+}
+
+/* Dress code: a pill/tag, never a plain sentence of text. */
+.inv-quickinfo-tagwrap { display: flex; justify-content: center; margin: 0 0 1.6rem; }
+.inv-quickinfo-tag {
+  display: inline-block; max-width: 30ch; padding: 0.55rem 1.2rem; border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--inv-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--inv-accent) 16%, transparent);
+  font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 600;
+  font-size: 0.76rem; letter-spacing: 0.05em; line-height: 1.5;
+  color: color-mix(in srgb, var(--inv-accent) 88%, white);
+}
+
+/* Solid gold/accent CTA — deliberately mixed toward white so it stays a
+   bright, legible surface for dark text across every palette (gold, rose,
+   sky-blue, sage, wine, emerald, …), never an outline button. Real tap
+   target well over the 44px minimum. */
+.inv-quickinfo-cta { display: flex; justify-content: center; margin: 0; }
+.inv-quickinfo-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 100%; max-width: 20rem; min-height: 44px; box-sizing: border-box;
+  padding: 0.95rem 1.75rem; border-radius: 9999px; border: none; cursor: pointer;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--inv-accent) 58%, white 42%) 0%,
+    color-mix(in srgb, var(--inv-accent) 80%, white 20%) 100%);
+  color: rgba(0, 0, 0, 0.87);
+  font-family: 'Montserrat', 'Nunito', sans-serif; font-weight: 700;
+  font-size: 0.86rem; letter-spacing: 0.09em; text-transform: uppercase;
+  text-decoration: none; -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 16px 34px -14px color-mix(in srgb, var(--inv-accent) 65%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.inv-quickinfo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -14px color-mix(in srgb, var(--inv-accent) 75%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.inv-quickinfo-btn:active { transform: translateY(0); }
+.inv-quickinfo-btn:focus-visible { outline: 2px solid color-mix(in srgb, var(--inv-accent) 80%, white); outline-offset: 3px; }

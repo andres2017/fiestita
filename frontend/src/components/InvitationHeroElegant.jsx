@@ -48,6 +48,12 @@ import { useEffect, useRef } from "react";
  *   eventDate  string   "YYYY-MM-DD" or ""                default ""
  *   emoji      string   theme.emoji, shown in the ringed medallion   default "✦"
  *   category   string   theme.category, selects the corner motif       default "boda"
+ *   children   node     optional — rendered inside the SAME card, right after
+ *                       the date, behind its own divider (see
+ *                       InvitationQuickInfoElegant). Replaces the scroll-cue
+ *                       affordance, since there's nothing left to scroll to
+ *                       once the quick-info content is already in this card.
+ *                       Omit to keep the original scroll-cue ending.
  *
  * Must render inside an element that defines the --inv-* CSS custom
  * properties (same styleVars wrapper used by InvitationView).
@@ -240,7 +246,7 @@ function useMagnetic(reduced) {
   return ref;
 }
 
-export const InvitationHeroElegant = ({ copy, dispInv, eventDate = "", emoji = "✦", category = "boda" }) => {
+export const InvitationHeroElegant = ({ copy, dispInv, eventDate = "", emoji = "✦", category = "boda", children }) => {
   const reduced = useReducedMotion();
   const dateLabel = formatHeroDate(eventDate) || "FECHA POR CONFIRMAR";
   const magnetRef = useMagnetic(reduced);
@@ -302,9 +308,20 @@ export const InvitationHeroElegant = ({ copy, dispInv, eventDate = "", emoji = "
           {dateLabel}
         </motion.p>
 
-        <motion.div className="inv-hero-glass-scroll" variants={upV} aria-hidden="true">
-          <span ref={magnetRef} className="inv-hero-glass-scroll-dot">▼</span>
-        </motion.div>
+        {children ? (
+          <>
+            <motion.div className="inv-hero-glass-divider" variants={upV} aria-hidden="true">
+              <motion.span className="inv-hero-glass-divider-line" variants={lineV} />
+              <span className="inv-hero-glass-divider-glyph">✦</span>
+              <motion.span className="inv-hero-glass-divider-line" variants={lineV} />
+            </motion.div>
+            {children}
+          </>
+        ) : (
+          <motion.div className="inv-hero-glass-scroll" variants={upV} aria-hidden="true">
+            <span ref={magnetRef} className="inv-hero-glass-scroll-dot">▼</span>
+          </motion.div>
+        )}
       </div>
     </motion.header>
   );

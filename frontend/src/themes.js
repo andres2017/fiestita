@@ -21,39 +21,48 @@ export const CATEGORY_FIELDS = {
   cumple_adulto: {
     nameLabel: "Nombre del festejado *", namePlaceholder: "Andrea", fallbackName: "El festejado", showAge: true, ageLabel: "Edad que cumple *", showFullName: true, showSubtitle: true,
     subtitleLabel: "Temática o nota especial (opcional)", subtitlePlaceholder: "Ej: Código de vestimenta: elegante casual",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Casual elegante",
   },
   boda: {
     nameLabel: "Nombres de los novios *", namePlaceholder: "Juan & María", fallbackName: "Los novios", showAge: false, showSubtitle: true,
     subtitleLabel: "Detalle especial (opcional)", subtitlePlaceholder: "Ceremonia religiosa seguida de recepción",
+    dressCodeLabel: "Etiqueta (opcional)", dressCodePlaceholder: "Ej: Etiqueta rigurosa · Paleta dorados y tierras",
   },
   partido: {
     nameLabel: "¿Quién invita? *", namePlaceholder: "Andrés", fallbackName: "El anfitrión", showAge: false, showSubtitle: true,
     subtitleLabel: "¿Qué partido? (opcional)", subtitlePlaceholder: "Colombia 🇨🇴 vs Argentina 🇦🇷",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Camiseta de tu equipo",
   },
   conferencia: {
     nameLabel: "Nombre del evento *", namePlaceholder: "Cumbre de Liderazgo Bogotá 2026", fallbackName: "Tu evento", showAge: false, showSubtitle: true,
     subtitleLabel: "Eslogan u organizador (opcional)", subtitlePlaceholder: "Organiza: Cámara de Comercio · Networking + charlas",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Formal de negocios",
   },
   bautizo: {
     nameLabel: "Nombre del bebé *", namePlaceholder: "Emma Sofía", fallbackName: "Tu bebé", showAge: false, showSubtitle: true,
     subtitleLabel: "Nota especial (opcional)", subtitlePlaceholder: "Con sus padrinos, Laura y Andrés",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Formal, tonos claros",
   },
   confirmacion: {
     nameLabel: "¿Quién se confirma? *", namePlaceholder: "Juan Pablo", fallbackName: "El confirmando", showAge: false, showSubtitle: true,
     subtitleLabel: "Parroquia o nota especial (opcional)", subtitlePlaceholder: "Parroquia San Judas Tadeo · Recibe de padrino: Carlos",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Formal",
   },
   parche: {
     nameLabel: "¿Quién arma el parche? *", namePlaceholder: "Caro y Dani", fallbackName: "El combo", showAge: false, showSubtitle: true,
     subtitleLabel: "¿Cuál es el plan? (opcional)", subtitlePlaceholder: "Tardeo en la terraza: picada, música y frías",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Casual, trae tu mejor actitud",
   },
   reto_deportivo: {
     nameLabel: "Nombre del reto o del grupo *", namePlaceholder: "Reto 10K Amanecer", fallbackName: "El reto", showAge: false, showSubtitle: true,
     subtitleLabel: "Distancia o nivel (opcional)", subtitlePlaceholder: "10K · Ritmo suave, todos los niveles",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Ropa deportiva cómoda",
   },
   novena: {
     nameLabel: "¿Quién ofrece la novena? *", namePlaceholder: "Familia Rodríguez", fallbackName: "La familia anfitriona",
     showAge: true, ageLabel: "¿Qué día de la novena les toca? * (1 al 9)", ageMin: 1, ageMax: 9,
     showSubtitle: true, subtitleLabel: "Nota para los invitados (opcional)", subtitlePlaceholder: "Trae tu maraca y algo pa' compartir",
+    dressCodeLabel: "Código de vestimenta (opcional)", dressCodePlaceholder: "Ej: Ropa navideña, rojo y verde",
   },
 };
 
@@ -645,6 +654,49 @@ export const PALETTES = [
   { id: "esmeralda", name: "Esmeralda", primary: "#1F6650", accent: "#3FA285", soft: "#C8E8DD" },
 ];
 export const PALETTE_MAP = Object.fromEntries(PALETTES.map((p) => [p.id, p]));
+
+// Curated typefaces the guest-organizer can pick instead of the theme's default
+// --inv-font. "" means "use the theme's own font". Every face here is already
+// loaded by the Google Fonts @import at the top of App.css, so picking one never
+// costs an extra network request. Kept to elegant/formal faces since this picker
+// only appears for the nine "grown-up" categories.
+export const FONTS = [
+  { id: "playfair", name: "Playfair Display", css: "'Playfair Display', serif" },
+  { id: "cormorant", name: "Cormorant Garamond", css: "'Cormorant Garamond', serif" },
+  { id: "cinzel", name: "Cinzel Decorative", css: "'Cinzel Decorative', serif" },
+  { id: "great_vibes", name: "Great Vibes", css: "'Great Vibes', cursive" },
+  { id: "sacramento", name: "Sacramento", css: "'Sacramento', cursive" },
+  { id: "dancing_script", name: "Dancing Script", css: "'Dancing Script', cursive" },
+  { id: "montserrat", name: "Montserrat", css: "'Montserrat', sans-serif" },
+  { id: "sora", name: "Sora", css: "'Sora', sans-serif" },
+  { id: "poiret", name: "Poiret One", css: "'Poiret One', sans-serif" },
+];
+export const FONT_MAP = Object.fromEntries(FONTS.map((f) => [f.id, f]));
+
+// Categories that render the dark glassmorphic InvitationHeroElegant cover (+ the quick-info
+// card right under it, + the font/dress-code pickers in the builder) instead of the plain
+// .inv-hero header. Shared between InvitationView.jsx (what to render) and Builder.jsx
+// (which optional fields to show while editing).
+export const ELEGANT_HERO_CATEGORIES = new Set([
+  "boda", "cumple_adulto", "conferencia", "bautizo", "confirmacion", "novena",
+  "partido", "parche", "reto_deportivo",
+]);
+export const ELEGANT_REVEAL_CATEGORIES = new Set(["boda", "cumple_adulto"]);
+
+// All theme copy (title/badge/subtitle/section headers/button labels/decorations) ships
+// with emoji baked in by design. When an invitation has show_emojis === false, every piece
+// of copy is run through this before rendering. Covers: \p{Extended_Pictographic} (most
+// emoji), \p{Regional_Indicator} (flag emoji like 🇨🇴, built from letter-pairs — not
+// covered by Extended_Pictographic), \p{Emoji_Modifier} (skin-tone modifiers), and the
+// ZWJ/variation-selector glue characters that stitch compound emoji (👨‍👩‍👧) together —
+// without those, removing the pictographs alone leaves the invisible glue behind. The
+// final replace collapses the double space left where a removed emoji sat between words
+// (theme copy uses both "🎉 Texto" and "Texto 🎉" patterns).
+const EMOJI_RE = /[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}‍️]/gu;
+export function stripEmojis(text) {
+  if (!text) return text;
+  return String(text).replace(EMOJI_RE, "").replace(/ {2,}/g, " ").trim();
+}
 
 export function formatDateEs(dateStr) {
   if (!dateStr) return "";

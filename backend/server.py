@@ -61,6 +61,13 @@ VALID_PALETTES = {
     "terracota", "lavanda", "vino", "esmeralda",
 }
 
+# Debe reflejar exactamente los ids de FONTS en frontend/src/themes.js. "" significa
+# "usar la fuente propia de la temática" (el valor por defecto, sin override).
+VALID_FONTS = {
+    "", "playfair", "cormorant", "cinzel", "great_vibes",
+    "sacramento", "dancing_script", "montserrat", "sora", "poiret",
+}
+
 # --- Pagos / administración -------------------------------------------------
 # ADMIN_KEY: clave secreta para acceder al panel "Mis ventas" (header X-Admin-Key).
 # WOMPI_EVENTS_SECRET: secreto de eventos de Wompi (pestaña Programadores),
@@ -122,6 +129,23 @@ ALLOWED_PHOTO_TYPES = {
 PHOTO_KEY_RE = re.compile(r"^photos/[a-f0-9]{32}\.(jpg|png|webp)$")
 LEGACY_PHOTO_URL_RE = re.compile(r"^/uploads/photos/[a-f0-9]{32}\.(jpg|png|webp)$")
 
+# "Invitación personalizada": el usuario puede subir su propio diseño (hecho en Canva u
+# otra herramienta) como imagen, PDF o video corto, para mostrarlo como portada en vez de
+# la portada generada por el sistema. Un solo endpoint cubre los tres tipos.
+MAX_CUSTOM_INVITE_BYTES = 20 * 1024 * 1024  # 20MB — pensado para que "no sea tan pesado"
+ALLOWED_CUSTOM_INVITE_TYPES = {
+    "image/jpeg": (".jpg", "image"),
+    "image/png": (".png", "image"),
+    "image/webp": (".webp", "image"),
+    "application/pdf": (".pdf", "pdf"),
+    "video/mp4": (".mp4", "video"),
+    "video/webm": (".webm", "video"),
+    "video/quicktime": (".mov", "video"),
+    "video/ogg": (".ogv", "video"),
+}
+CUSTOM_INVITE_KEY_RE = re.compile(r"^custom-invites/[a-f0-9]{32}\.(jpg|png|webp|pdf|mp4|webm|mov|ogv)$")
+VALID_CUSTOM_INVITE_TYPES = {"", "image", "pdf", "video"}
+
 YOUTUBE_URL_RE = re.compile(r"^https://(www\.)?(youtube\.com/(watch\?v=|shorts/)|youtu\.be/)[\w-]+")
 SPOTIFY_URL_RE = re.compile(r"^https://open\.spotify\.com/(track|album|playlist)/[\w]+")
 MAX_ITINERARY_ITEMS = 20
@@ -165,6 +189,20 @@ def _is_valid_photo_urls(urls: list) -> bool:
     return all(_one(u) for u in urls)
 
 
+def _is_valid_custom_invite(url: str, invite_type: str) -> bool:
+    """custom_invite_url must point at a file this server generated via /uploads/custom-invite
+    (stored in R2), so it can't be used to smuggle an arbitrary external or javascript: URL."""
+    if invite_type not in VALID_CUSTOM_INVITE_TYPES:
+        return False
+    if url == "":
+        return invite_type == ""
+    if invite_type == "":
+        return False
+    if not (R2_PUBLIC_URL and url.startswith(R2_PUBLIC_URL + "/")):
+        return False
+    return bool(CUSTOM_INVITE_KEY_RE.match(url[len(R2_PUBLIC_URL) + 1:]))
+
+
 def _is_valid_song_url(url: str) -> bool:
     """Only allow YouTube/Spotify links (the two the player embed knows how to render),
     so this user-supplied URL can't be used to smuggle an arbitrary/javascript: URL."""
@@ -204,6 +242,10 @@ def _validate_invitation_links(data: "InvitationData") -> None:
         raise HTTPException(status_code=400, detail="Valor de audiencia inválido")
     if data.color_palette not in VALID_PALETTES:
         raise HTTPException(status_code=400, detail="Paleta de colores inválida")
+    if data.font_family not in VALID_FONTS:
+        raise HTTPException(status_code=400, detail="Fuente inválida")
+    if not _is_valid_custom_invite(data.custom_invite_url, data.custom_invite_type):
+        raise HTTPException(status_code=400, detail="Invitación personalizada inválida")
 
 
 class ItineraryItem(BaseModel):
@@ -241,6 +283,12 @@ class InvitationData(BaseModel):
     audience: str = "todos"  # "ninos" | "todos" | "adultos" — who the event is for
     ask_phone: bool = True  # whether the guest RSVP form collects a phone/WhatsApp number
     color_palette: str = ""  # optional override id from PALETTES, "" = use the theme's own colors
+    font_family: str = ""  # optional override id from FONTS, "" = use the theme's own font
+    dress_code: str = ""  # optional dress-code/etiquette tag shown in the quick-info card
+    show_emojis: bool = True  # whether auto-generated copy/decorations render with emoji
+    custom_invite_url: str = ""  # optional user-uploaded design (image/pdf/video), replaces the cover
+    custom_invite_type: str = ""  # "" | "image" | "pdf" | "video" — set together with custom_invite_url
+    custom_invite_active: bool = False  # show custom_invite_url as the cover instead of the generated one
 
 
 class Invitation(InvitationData):
@@ -380,6 +428,33 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
     r2_client.put_object(Bucket=R2_BUCKET_NAME, Key=key, Body=contents, ContentType=file.content_type)
 
     return {"photo_url": f"{R2_PUBLIC_URL}/{key}"}
+
+
+@api_router.post("/uploads/custom-invite")
+async def upload_custom_invite(request: Request, file: UploadFile = File(...)):
+    """Sube un diseño de invitación hecho por el usuario (ej. en Canva) como imagen, PDF o
+    video corto, para usarlo como portada en vez de la generada por el sistema. La duración
+    máxima del video (30s) se valida en el frontend antes de subir; aquí solo se valida tipo
+    y peso, igual que /uploads/video y /uploads/photo."""
+    allowed = ALLOWED_CUSTOM_INVITE_TYPES.get(file.content_type)
+    if not allowed:
+        raise HTTPException(status_code=400, detail="Formato no soportado. Usa imagen (JPG/PNG/WEBP), PDF o video (MP4/WebM/MOV/OGG).")
+    ext, invite_type = allowed
+    if not r2_client or not R2_BUCKET_NAME or not R2_PUBLIC_URL:
+        raise HTTPException(status_code=503, detail="Almacenamiento de archivos no configurado")
+
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_CUSTOM_INVITE_BYTES + 1_000_000:
+        raise HTTPException(status_code=413, detail="El archivo no puede pesar más de 20MB.")
+
+    contents = await file.read(MAX_CUSTOM_INVITE_BYTES + 1)
+    if len(contents) > MAX_CUSTOM_INVITE_BYTES:
+        raise HTTPException(status_code=413, detail="El archivo no puede pesar más de 20MB.")
+
+    key = f"custom-invites/{uuid.uuid4().hex}{ext}"
+    r2_client.put_object(Bucket=R2_BUCKET_NAME, Key=key, Body=contents, ContentType=file.content_type)
+
+    return {"custom_invite_url": f"{R2_PUBLIC_URL}/{key}", "custom_invite_type": invite_type}
 
 
 @api_router.get("/invitations/{inv_id}/rsvps")

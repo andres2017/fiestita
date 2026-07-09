@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { THEMES, CATEGORY_FIELDS, PALETTE_MAP, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
+import {
+  THEMES, CATEGORY_FIELDS, PALETTE_MAP, FONT_MAP, ELEGANT_HERO_CATEGORIES, ELEGANT_REVEAL_CATEGORIES,
+  formatDateEs, formatTimeEs, calendarUrl, whatsappUrl, stripEmojis,
+} from "../themes";
 import { InvitationReveal } from "./InvitationReveal";
 import { InvitationRevealElegant } from "./InvitationRevealElegant";
 import { InvitationHeroElegant } from "./InvitationHeroElegant";
+import { InvitationQuickInfoElegant } from "./InvitationQuickInfoElegant";
+import { InvitationCustomCover } from "./InvitationCustomCover";
 import { InvitationSongPlayer } from "./InvitationSongPlayer";
 import { InvitationGiftCard } from "./InvitationGiftCard";
 import { InvitationItinerary } from "./InvitationItinerary";
@@ -12,11 +17,6 @@ import { InvitationPhotoGallery } from "./InvitationPhotoGallery";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
-const ELEGANT_REVEAL_CATEGORIES = new Set(["boda", "cumple_adulto"]);
-const ELEGANT_HERO_CATEGORIES = new Set([
-  "boda", "cumple_adulto", "conferencia", "bautizo", "confirmacion", "novena",
-  "partido", "parche", "reto_deportivo",
-]);
 
 // Uploaded media may be a full URL (Cloudflare R2) or a legacy local backend path.
 const mediaUrl = (u) => (!u ? u : u.startsWith("http") ? u : `${BACKEND_BASE}${u}`);
@@ -44,11 +44,26 @@ function useCountdown(dateStr, timeStr) {
   return left;
 }
 
+// Wraps theme.copy so every field (whether a plain string or an (inv) => string
+// function) has emoji stripped when the organizer turned them off. Returns the
+// original object untouched when emojis are on, so this is a no-op for every
+// invitation created before show_emojis existed (field defaults to true).
+function applyEmojiPreference(copy, showEmojis) {
+  if (showEmojis) return copy;
+  const wrapped = {};
+  for (const [key, value] of Object.entries(copy)) {
+    wrapped[key] = typeof value === "function" ? (...args) => stripEmojis(value(...args)) : stripEmojis(value);
+  }
+  return wrapped;
+}
+
 export const InvitationView = ({ inv, preview = false }) => {
   const theme = THEMES[inv.theme] || THEMES.videojuegos;
   const palette = PALETTE_MAP[inv.color_palette];
+  const font = FONT_MAP[inv.font_family];
   const c = { ...theme.colors, ...(palette ? { primary: palette.primary, accent: palette.accent, soft: palette.soft } : null) };
-  const copy = theme.copy;
+  const showEmojis = inv.show_emojis !== false;
+  const copy = applyEmojiPreference(theme.copy, showEmojis);
   const left = useCountdown(inv.event_date, inv.event_time);
   const [form, setForm] = useState({ nombre: "", telefono: "", asiste: "✅ ¡Sí, voy!", adultos: 1, ninos: 0, mensaje: "" });
   const [sent, setSent] = useState(false);
@@ -64,7 +79,7 @@ export const InvitationView = ({ inv, preview = false }) => {
     "--inv-text": c.text,
     "--inv-accent": c.accent,
     "--inv-soft": c.soft,
-    "--inv-font": theme.font,
+    "--inv-font": font ? font.css : theme.font,
     "--inv-scale": theme.fontScale,
   };
 
@@ -113,32 +128,49 @@ export const InvitationView = ({ inv, preview = false }) => {
 
   return (
     <div className={`inv-root ${theme.dark ? "inv-dark" : "inv-light"}`} style={styleVars} data-testid="invitation-view">
-      <div className="inv-decorations" aria-hidden="true">
-        {theme.decorations.map((d, i) => (
-          <span key={i} className={`inv-deco inv-deco-${i}`}>{d}</span>
-        ))}
-      </div>
+      {showEmojis && (
+        <div className="inv-decorations" aria-hidden="true">
+          {theme.decorations.map((d, i) => (
+            <span key={i} className={`inv-deco inv-deco-${i}`}>{d}</span>
+          ))}
+        </div>
+      )}
 
       <div className="inv-content">
-        {/* HERO */}
-        {ELEGANT_HERO_CATEGORIES.has(theme.category) ? (
-          <InvitationHeroElegant
-            copy={copy}
-            dispInv={dispInv}
-            eventDate={inv.event_date}
-            emoji={theme.emoji}
-            category={theme.category}
-          />
+        {/* CUSTOM INVITE COVER (replaces the generated hero entirely when active) */}
+        {inv.custom_invite_active && inv.custom_invite_url ? (
+          <InvitationCustomCover url={mediaUrl(inv.custom_invite_url)} type={inv.custom_invite_type} />
         ) : (
-          <header className="inv-hero">
-            <div className="inv-badge" data-testid="inv-badge">
-              {copy.badge(dispInv)} · {inv.event_date ? inv.event_date.split("-").reverse().join(" · ") : ""}
-            </div>
-            <h1 className="inv-title" data-testid="inv-title">{copy.title(dispInv)}</h1>
-            {inv.child_full_name && <p className="inv-fullname">{inv.child_full_name.toUpperCase()}</p>}
-            <p className="inv-subtitle">{copy.subtitle(dispInv)}</p>
-            <div className="inv-arrows">▼ ▼ ▼</div>
-          </header>
+          <>
+            {/* HERO (+ QUICK INFO merged into the same card as its children — date/venue/
+                dress-code/message/RSVP button, right after the hero's own date line) */}
+            {ELEGANT_HERO_CATEGORIES.has(theme.category) ? (
+              <InvitationHeroElegant
+                copy={copy}
+                dispInv={dispInv}
+                eventDate={inv.event_date}
+                emoji={showEmojis ? theme.emoji : "✦"}
+                category={theme.category}
+              >
+                <InvitationQuickInfoElegant
+                  inv={inv}
+                  punctualNote={copy.punctual}
+                  rsvpHref="#rsvp"
+                  confirmLabel="Confirmar asistencia"
+                />
+              </InvitationHeroElegant>
+            ) : (
+              <header className="inv-hero">
+                <div className="inv-badge" data-testid="inv-badge">
+                  {copy.badge(dispInv)} · {inv.event_date ? inv.event_date.split("-").reverse().join(" · ") : ""}
+                </div>
+                <h1 className="inv-title" data-testid="inv-title">{copy.title(dispInv)}</h1>
+                {inv.child_full_name && <p className="inv-fullname">{inv.child_full_name.toUpperCase()}</p>}
+                <p className="inv-subtitle">{copy.subtitle(dispInv)}</p>
+                <div className="inv-arrows">▼ ▼ ▼</div>
+              </header>
+            )}
+          </>
         )}
 
         {/* VIDEO */}

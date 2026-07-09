@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { CATEGORIES, CATEGORY_FIELDS, THEMES, THEME_LIST, PALETTES } from "../themes";
+import { CATEGORIES, CATEGORY_FIELDS, THEMES, THEME_LIST, PALETTES, FONTS, ELEGANT_HERO_CATEGORIES } from "../themes";
 import { InvitationView } from "../components/InvitationView";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
@@ -10,6 +10,8 @@ const API = `${BACKEND_BASE}/api`;
 const MAX_VIDEO_MB = 50;
 const MAX_PHOTO_MB = 8;
 const MAX_PHOTOS = 3;
+const MAX_CUSTOM_INVITE_MB = 20;
+const MAX_CUSTOM_INVITE_VIDEO_SECONDS = 30;
 
 const EMPTY = {
   theme: "videojuegos",
@@ -38,6 +40,12 @@ const EMPTY = {
   audience: "todos",
   ask_phone: true,
   color_palette: "",
+  font_family: "",
+  dress_code: "",
+  show_emojis: true,
+  custom_invite_url: "",
+  custom_invite_type: "",
+  custom_invite_active: false,
 };
 
 const AUDIENCE_OPTIONS = [
@@ -63,6 +71,7 @@ export default function Builder({ editMode = false }) {
 
   const fieldConfig = CATEGORY_FIELDS[THEMES[inv.theme]?.category] || CATEGORY_FIELDS.cumple_infantil;
   const themeColors = THEMES[inv.theme]?.colors || THEMES.videojuegos.colors;
+  const isElegantCategory = ELEGANT_HERO_CATEGORIES.has(THEMES[inv.theme]?.category);
 
   useEffect(() => {
     if (editMode && id && token) {
@@ -156,6 +165,64 @@ export default function Builder({ editMode = false }) {
     }
   };
   const removePhotoSlot = (slotIndex) => setInv((prev) => ({ ...prev, photo_urls: prev.photo_urls.filter((_, i) => i !== slotIndex) }));
+
+  /** Reads a video file's duration client-side (no upload yet) via a throwaway <video>. */
+  const readVideoDuration = (file) =>
+    new Promise((resolve, reject) => {
+      const el = document.createElement("video");
+      el.preload = "metadata";
+      el.onloadedmetadata = () => {
+        URL.revokeObjectURL(el.src);
+        resolve(el.duration);
+      };
+      el.onerror = () => {
+        URL.revokeObjectURL(el.src);
+        reject(new Error("No se pudo leer el video"));
+      };
+      el.src = URL.createObjectURL(file);
+    });
+
+  const [uploadingCustomInvite, setUploadingCustomInvite] = useState(false);
+  const handleCustomInviteChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_CUSTOM_INVITE_MB * 1024 * 1024) {
+      toast.error(`El archivo no puede pesar más de ${MAX_CUSTOM_INVITE_MB}MB.`);
+      return;
+    }
+    if (file.type.startsWith("video/")) {
+      try {
+        const duration = await readVideoDuration(file);
+        if (duration > MAX_CUSTOM_INVITE_VIDEO_SECONDS) {
+          toast.error(`El video no puede durar más de ${MAX_CUSTOM_INVITE_VIDEO_SECONDS} segundos.`);
+          return;
+        }
+      } catch {
+        toast.error("No se pudo leer el video. Prueba con otro archivo.");
+        return;
+      }
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploadingCustomInvite(true);
+    try {
+      const r = await axios.post(`${API}/uploads/custom-invite`, formData);
+      setInv((prev) => ({
+        ...prev,
+        custom_invite_url: r.data.custom_invite_url,
+        custom_invite_type: r.data.custom_invite_type,
+        custom_invite_active: true,
+      }));
+      toast.success("¡Invitación personalizada subida! 🎨");
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "No se pudo subir el archivo. Inténtalo de nuevo.");
+    } finally {
+      setUploadingCustomInvite(false);
+    }
+  };
+  const removeCustomInvite = () =>
+    setInv((prev) => ({ ...prev, custom_invite_url: "", custom_invite_type: "", custom_invite_active: false }));
 
   const addItineraryItem = () => setInv((prev) => ({ ...prev, itinerary: [...prev.itinerary, { time: "", label: "", emoji: "" }] }));
   const updateItineraryItem = (i, key) => (e) =>
@@ -310,6 +377,58 @@ export default function Builder({ editMode = false }) {
             </span>
           </label>
 
+          <div className="field custom-invite-field">
+            <label className="field-label">¿Ya tienes tu invitación diseñada? (opcional)</label>
+            <p className="field-help">
+              Sube tu propio diseño (hecho en Canva u otra herramienta) como imagen, PDF o video de hasta{" "}
+              {MAX_CUSTOM_INVITE_VIDEO_SECONDS} segundos. Puedes elegir si se muestra esa o la que arma Fiestita.
+            </p>
+
+            {inv.custom_invite_url ? (
+              <div className="custom-invite-preview" data-testid="custom-invite-preview">
+                {inv.custom_invite_type === "image" && (
+                  <img src={inv.custom_invite_url} alt="Tu invitación" className="custom-invite-thumb" />
+                )}
+                {inv.custom_invite_type === "video" && (
+                  <video src={inv.custom_invite_url} className="custom-invite-thumb" controls playsInline />
+                )}
+                {inv.custom_invite_type === "pdf" && (
+                  <a href={inv.custom_invite_url} target="_blank" rel="noopener noreferrer" className="custom-invite-pdf-chip">
+                    📄 Ver PDF subido
+                  </a>
+                )}
+                <button type="button" className="btn-outline" onClick={removeCustomInvite} data-testid="custom-invite-remove-btn">
+                  ✕ Quitar
+                </button>
+              </div>
+            ) : (
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4,video/webm,video/quicktime,video/ogg"
+                onChange={handleCustomInviteChange}
+                disabled={uploadingCustomInvite}
+                data-testid="input-custom-invite"
+              />
+            )}
+            {uploadingCustomInvite && <p className="field-help">Subiendo... 🎨</p>}
+
+            {inv.custom_invite_url && (
+              <label className="reveal-toggle custom-invite-active-toggle" htmlFor="input-custom-invite-active">
+                <input
+                  id="input-custom-invite-active"
+                  type="checkbox"
+                  checked={inv.custom_invite_active}
+                  onChange={(e) => setInv({ ...inv, custom_invite_active: e.target.checked })}
+                  data-testid="input-custom-invite-active"
+                />
+                <span>
+                  🖼️ Mostrar mi invitación personalizada como portada
+                  <small>Si lo desactivas, se muestra la invitación que arma Fiestita en su lugar.</small>
+                </span>
+              </label>
+            )}
+          </div>
+
           <div className="field-row">
             <div className={fieldConfig.showAge ? "field" : "field field-full"}>
               <label className="field-label" htmlFor="input-child-name">{fieldConfig.nameLabel}</label>
@@ -334,6 +453,14 @@ export default function Builder({ editMode = false }) {
             <div className="field">
               <label className="field-label" htmlFor="input-subtitle">{fieldConfig.subtitleLabel}</label>
               <input id="input-subtitle" value={inv.event_subtitle} onChange={set("event_subtitle")} placeholder={fieldConfig.subtitlePlaceholder} data-testid="input-subtitle" />
+              <p className="field-help">Aparece como mensaje bajo el nombre en la portada de tu invitación.</p>
+            </div>
+          )}
+
+          {isElegantCategory && (
+            <div className="field">
+              <label className="field-label" htmlFor="input-dress-code">{fieldConfig.dressCodeLabel || "Código de vestimenta o etiqueta (opcional)"}</label>
+              <input id="input-dress-code" value={inv.dress_code} onChange={set("dress_code")} placeholder={fieldConfig.dressCodePlaceholder || "Ej: Formal"} data-testid="input-dress-code" />
             </div>
           )}
 
@@ -511,6 +638,47 @@ export default function Builder({ editMode = false }) {
             </div>
             <p className="field-help">Opcional: cambia los colores de tu tarjeta sin cambiar la temática. El primer círculo son los colores originales.</p>
           </div>
+
+          {isElegantCategory && (
+            <div className="field">
+              <label className="field-label">Tipo de letra</label>
+              <div className="font-picker" data-testid="font-picker">
+                <button
+                  type="button"
+                  className={`font-chip ${!inv.font_family ? "active" : ""}`}
+                  onClick={() => setInv({ ...inv, font_family: "" })}
+                  data-testid="font-chip-original">
+                  Original
+                </button>
+                {FONTS.map((f) => (
+                  <button
+                    type="button"
+                    key={f.id}
+                    className={`font-chip ${inv.font_family === f.id ? "active" : ""}`}
+                    style={{ fontFamily: f.css }}
+                    onClick={() => setInv({ ...inv, font_family: f.id })}
+                    data-testid={`font-chip-${f.id}`}>
+                    {f.name}
+                  </button>
+                ))}
+              </div>
+              <p className="field-help">Opcional: cambia la fuente de tu tarjeta sin cambiar la temática.</p>
+            </div>
+          )}
+
+          <label className="reveal-toggle" htmlFor="input-show-emojis">
+            <input
+              id="input-show-emojis"
+              type="checkbox"
+              checked={inv.show_emojis}
+              onChange={(e) => setInv({ ...inv, show_emojis: e.target.checked })}
+              data-testid="input-show-emojis"
+            />
+            <span>
+              😀 Usar emoticones en la tarjeta
+              <small>Si lo desactivas, tu invitación se ve sin emoticones — solo texto, para un estilo más sobrio.</small>
+            </span>
+          </label>
 
           <label className="reveal-toggle" htmlFor="input-ask-phone">
             <input

@@ -225,6 +225,52 @@ class TestCreate:
         })
         assert r.status_code == 400
 
+    def test_create_font_dress_code_and_show_emojis_roundtrip(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_FontDefault",
+            "event_date": "2026-12-01", "event_time": "10:00",
+        })
+        assert r.status_code == 200, r.text
+        d = r.json()
+        edited = requests.get(f"{API}/invitations/{d['id']}/edit", params={"token": d["edit_token"]})
+        assert edited.json()["font_family"] == ""
+        assert edited.json()["dress_code"] == ""
+        assert edited.json()["show_emojis"] is True
+
+        r2 = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_FontSet",
+            "event_date": "2026-12-01", "event_time": "10:00",
+            "font_family": "cinzel", "dress_code": "Etiqueta rigurosa", "show_emojis": False,
+        })
+        assert r2.status_code == 200, r2.text
+        d2 = r2.json()
+        edited2 = requests.get(f"{API}/invitations/{d2['id']}/edit", params={"token": d2["edit_token"]})
+        assert edited2.json()["font_family"] == "cinzel"
+        assert edited2.json()["dress_code"] == "Etiqueta rigurosa"
+        assert edited2.json()["show_emojis"] is False
+
+    def test_create_rejects_invalid_font(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_FontMala",
+            "event_date": "2026-12-01", "event_time": "10:00", "font_family": "comic_sans",
+        })
+        assert r.status_code == 400
+
+    def test_create_rejects_custom_invite_type_without_url(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_CustomInviteMala",
+            "event_date": "2026-12-01", "event_time": "10:00", "custom_invite_type": "image",
+        })
+        assert r.status_code == 400
+
+    def test_create_rejects_custom_invite_external_url(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_CustomInviteExterna",
+            "event_date": "2026-12-01", "event_time": "10:00",
+            "custom_invite_url": "https://evil.com/x.jpg", "custom_invite_type": "image",
+        })
+        assert r.status_code == 400
+
     def test_create_ask_phone_defaults_true_and_is_settable(self):
         r = requests.post(f"{API}/invitations", json={
             "theme": "espacio", "child_name": "TEST_AskPhoneDefault", "age": 5,

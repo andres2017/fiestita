@@ -13,7 +13,11 @@ import { InvitationPhotoGallery } from "./InvitationPhotoGallery";
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_BASE}/api`;
 const ELEGANT_REVEAL_CATEGORIES = new Set(["boda", "cumple_adulto"]);
-const ELEGANT_HERO_CATEGORIES = new Set(["boda", "cumple_adulto", "conferencia", "bautizo", "confirmacion", "novena"]);
+const ELEGANT_HERO_CATEGORIES = new Set([
+  "boda", "cumple_adulto", "conferencia", "bautizo", "confirmacion", "novena",
+  "partido", "parche", "reto_deportivo",
+]);
+const ENERGETIC_HERO_CATEGORIES = new Set(["partido", "parche", "reto_deportivo"]);
 
 // Uploaded media may be a full URL (Cloudflare R2) or a legacy local backend path.
 const mediaUrl = (u) => (!u ? u : u.startsWith("http") ? u : `${BACKEND_BASE}${u}`);
@@ -124,6 +128,7 @@ export const InvitationView = ({ inv, preview = false }) => {
             eventDate={inv.event_date}
             emoji={theme.emoji}
             dark={theme.dark}
+            energetic={ENERGETIC_HERO_CATEGORIES.has(theme.category)}
           />
         ) : (
           <header className="inv-hero">

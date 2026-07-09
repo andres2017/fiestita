@@ -894,3 +894,38 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
   .inv-hero-elegant-corner { width: 34px; height: 34px; }
   .inv-hero-elegant-name { font-size: calc(clamp(2.1rem, 13vw, 3rem) * var(--inv-scale, 1)); }
 }
+
+/* ===== HERO — ELEGANT, ENERGETIC VARIANT (mundial, tardeo, gloria — set via
+   the `energetic` prop on InvitationHeroElegant). Same skeleton, same
+   sizing, same motion as above; only the ornament mood changes. Those three
+   themes run bold impact/poster fonts (Anton, Lilita One, Russo One) on
+   saturated near-neon dark palettes with shouty copy ("¡GOOOL!", "¡DE UNA,
+   ME APUNTO!") — the default twig ornament's 1.15px organic hairline reads
+   as wedding-stationery filigree and undercuts that register. This variant
+   swaps in CornerMarkEnergetic (crop-mark bracket + speed-slashes + a
+   filled diamond stud) with a heavier stroke and sharp miter/square joins,
+   plus a bolder divider/date glyph and a more saturated emblem ring. ===== */
+.inv-hero-elegant-energetic .inv-hero-elegant-corner {
+  width: 46px; height: 46px;
+  color: color-mix(in srgb, var(--inv-primary) 88%, transparent);
+}
+.inv-hero-elegant-energetic .inv-hero-elegant-corner path {
+  stroke-width: 2.75px; stroke-linecap: square; stroke-linejoin: miter;
+}
+.inv-hero-elegant-energetic .inv-hero-elegant-corner rect { fill: var(--inv-accent); stroke: none; }
+
+.inv-hero-elegant-energetic .inv-hero-elegant-divider-line { height: 2px; }
+.inv-hero-elegant-energetic .inv-hero-elegant-divider-glyph { font-size: 0.6rem; }
+
+.inv-hero-elegant-energetic .inv-hero-elegant-date::before,
+.inv-hero-elegant-energetic .inv-hero-elegant-date::after { content: "◆"; font-size: 0.55rem; }
+
+.inv-hero-elegant-energetic .inv-hero-elegant-emblem-ring {
+  border-width: 2px;
+  border-color: color-mix(in srgb, var(--inv-primary) 70%, transparent);
+  box-shadow: 0 12px 26px -14px color-mix(in srgb, var(--inv-primary) 55%, transparent);
+}
+
+@media (max-width: 360px) {
+  .inv-hero-elegant-energetic .inv-hero-elegant-corner { width: 38px; height: 38px; }
+}

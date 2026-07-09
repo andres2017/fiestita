@@ -190,6 +190,15 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .audience-chip.active { background: var(--l-secondary); color: #fff; box-shadow: 3px 3px 0 rgba(31,41,55,0.8); }
 .category-locked-note { margin: -0.75rem 0 1.25rem; }
 
+.palette-picker { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0.25rem 0 0.4rem; }
+.palette-swatch {
+  width: 2.4rem; height: 2.4rem; border-radius: 50%; padding: 0; cursor: pointer;
+  border: 2px solid #fff; outline: 2px solid #1F2937; outline-offset: 2px;
+  transition: transform 0.15s ease-out;
+}
+.palette-swatch:hover { transform: translateY(-2px) scale(1.06); }
+.palette-swatch.active { outline: 3px solid var(--l-secondary); outline-offset: 2px; }
+
 .theme-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 1.25rem; }
 .theme-chip {
   border: 2px solid #1F2937; background: #fff; border-radius: 9999px; padding: 0.45rem 0.9rem;
@@ -816,7 +825,13 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
    theme's own --inv-primary/--inv-accent mixed toward near-black via
    color-mix, so this always renders dark/dramatic regardless of whether the
    theme itself is nominally light or dark — a deliberate "cover moment",
-   not a light/dark variant of the rest of the card. ===== */
+   not a light/dark variant of the rest of the card.
+   Refinement pass: the name runs smaller/narrower (see .inv-hero-glass-name)
+   for a calmer "premium stationery" read instead of a shouting headline,
+   and the hero carries more ambient richness — twinkling sparkle motes, a
+   slow light sweep across the name, a breathing emblem glow — layered on
+   the pre-existing drift orbs / scroll dot, all gated by
+   prefers-reduced-motion the same way those already were. ===== */
 .inv-hero-glass {
   position: relative; isolation: isolate; overflow: hidden;
   padding: 2.75rem 1.1rem 3rem; margin: -2rem -1.25rem 1.75rem;
@@ -841,6 +856,27 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 @keyframes heroGlassFloatB { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-32px, -20px); } }
 @keyframes heroGlassFloatC { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, -26px); } }
 
+/* Ambient sparkle motes, pinned inside the header's own top/bottom padding
+   strips — clear of the card at any width, so they always read as dust in
+   the atmosphere rather than clutter over the text. Sat above the card
+   (z-index) so its drop shadow never dims them. */
+.inv-hero-glass-sparkles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.inv-hero-glass-spark {
+  position: absolute; width: 4px; height: 4px; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--inv-accent) 65%, white) 60%, transparent 75%);
+  box-shadow: 0 0 7px 1.5px color-mix(in srgb, var(--inv-accent) 50%, white 20%);
+  animation: heroGlassTwinkle 5.4s ease-in-out infinite;
+}
+.inv-hero-glass-spark-1 { top: 10px; left: 16%; animation-delay: 0s; }
+.inv-hero-glass-spark-2 { top: 22px; right: 20%; width: 3px; height: 3px; animation-delay: 1.3s; }
+.inv-hero-glass-spark-3 { top: 6px; left: 54%; width: 3px; height: 3px; animation-delay: 2.6s; }
+.inv-hero-glass-spark-4 { bottom: 14px; left: 24%; animation-delay: 0.7s; }
+.inv-hero-glass-spark-5 { bottom: 22px; right: 18%; width: 3px; height: 3px; animation-delay: 3.4s; }
+@keyframes heroGlassTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.85; transform: scale(1); }
+}
+
 .inv-hero-glass-card {
   position: relative; z-index: 1; max-width: 26rem; margin: 0 auto; text-align: center;
   background: rgba(255, 255, 255, 0.055);
@@ -850,7 +886,7 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
   box-shadow: 0 2px 0 rgba(255,255,255,0.06) inset, 0 30px 70px -26px rgba(0,0,0,0.7);
 }
 
-.inv-hero-glass-vine { position: absolute; z-index: 1; width: 70px; height: 70px; color: color-mix(in srgb, var(--inv-accent) 80%, white); opacity: 0.5; pointer-events: none; }
+.inv-hero-glass-vine { position: absolute; z-index: 1; width: 70px; height: 70px; color: color-mix(in srgb, var(--inv-accent) 80%, white); opacity: 0.62; pointer-events: none; }
 .inv-hero-glass-vine svg { display: block; width: 100%; height: 100%; }
 .inv-hero-glass-vine-tl { top: -14px; left: -14px; }
 .inv-hero-glass-vine-br { bottom: -14px; right: -14px; transform: rotate(180deg); }
@@ -866,15 +902,39 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
   display: grid; place-items: center; width: 3.2rem; height: 3.2rem; border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--inv-accent) 55%, transparent);
   box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--inv-accent) 60%, transparent);
+  animation: heroGlassEmblemPulse 4.8s ease-in-out infinite;
 }
 .inv-hero-glass-emblem-icon { font-size: 1.35rem; line-height: 1; }
+@keyframes heroGlassEmblemPulse {
+  0%, 100% { box-shadow: 0 10px 26px -14px color-mix(in srgb, var(--inv-accent) 60%, transparent); }
+  50% { box-shadow: 0 10px 34px -10px color-mix(in srgb, var(--inv-accent) 82%, transparent), 0 0 0 3px color-mix(in srgb, var(--inv-accent) 20%, transparent); }
+}
 
+/* Smaller, narrower, airier — "elegant card" rather than a poster headline.
+   max-width in ch lets text-wrap:balance fold long Spanish titles into
+   short, centered lines instead of one huge line. The ::after is a slow
+   diagonal light sweep clipped to the name's own box (overflow: hidden),
+   never the whole card, so it can't collide with the corner motifs. */
 .inv-hero-glass-name {
-  margin: 0 0 1.1rem; font-family: 'Playfair Display', serif; font-weight: 700;
-  font-size: clamp(2.1rem, 9vw, 2.9rem); line-height: 1.15;
+  position: relative; overflow: hidden;
+  margin: 0 auto 1.3rem; max-width: 19ch;
+  font-family: 'Playfair Display', serif; font-weight: 700;
+  font-size: clamp(1.55rem, 6.8vw, 2.25rem); line-height: 1.32; letter-spacing: -0.008em;
   color: color-mix(in srgb, var(--inv-accent) 55%, white 45%);
-  text-shadow: 0 0 34px color-mix(in srgb, var(--inv-accent) 45%, transparent);
+  text-shadow: 0 0 26px color-mix(in srgb, var(--inv-accent) 38%, transparent);
   text-wrap: balance; overflow-wrap: anywhere;
+}
+.inv-hero-glass-name::after {
+  content: ""; position: absolute; inset: -25% -55%; z-index: 1; pointer-events: none;
+  background: linear-gradient(100deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%);
+  transform: translateX(-130%); opacity: 0;
+  animation: heroGlassNameSheen 7.5s ease-in-out infinite;
+}
+@keyframes heroGlassNameSheen {
+  0%, 10%   { transform: translateX(-130%); opacity: 0; }
+  28%       { opacity: 0.6; }
+  46%       { opacity: 0.6; }
+  64%, 100% { transform: translateX(130%); opacity: 0; }
 }
 
 .inv-hero-glass-sub {
@@ -905,10 +965,15 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 @keyframes heroGlassBob { 0%, 100% { margin-top: 0; } 50% { margin-top: 5px; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .inv-hero-glass-orb, .inv-hero-glass-scroll-dot { animation: none; }
+  .inv-hero-glass-orb,
+  .inv-hero-glass-scroll-dot,
+  .inv-hero-glass-spark,
+  .inv-hero-glass-name::after,
+  .inv-hero-glass-emblem-ring {
+    animation: none;
+  }
 }
 
 @media (max-width: 360px) {
   .inv-hero-glass-card { padding: 2.2rem 1.1rem 1.7rem; }
-  .inv-hero-glass-name { font-size: clamp(1.8rem, 10vw, 2.4rem); }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { THEMES, CATEGORY_FIELDS, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
+import { THEMES, CATEGORY_FIELDS, PALETTE_MAP, formatDateEs, formatTimeEs, calendarUrl, whatsappUrl } from "../themes";
 import { InvitationReveal } from "./InvitationReveal";
 import { InvitationRevealElegant } from "./InvitationRevealElegant";
 import { InvitationHeroElegant } from "./InvitationHeroElegant";
@@ -46,7 +46,8 @@ function useCountdown(dateStr, timeStr) {
 
 export const InvitationView = ({ inv, preview = false }) => {
   const theme = THEMES[inv.theme] || THEMES.videojuegos;
-  const c = theme.colors;
+  const palette = PALETTE_MAP[inv.color_palette];
+  const c = { ...theme.colors, ...(palette ? { primary: palette.primary, accent: palette.accent, soft: palette.soft } : null) };
   const copy = theme.copy;
   const left = useCountdown(inv.event_date, inv.event_time);
   const [form, setForm] = useState({ nombre: "", telefono: "", asiste: "✅ ¡Sí, voy!", adultos: 1, ninos: 0, mensaje: "" });
@@ -126,6 +127,7 @@ export const InvitationView = ({ inv, preview = false }) => {
             dispInv={dispInv}
             eventDate={inv.event_date}
             emoji={theme.emoji}
+            category={theme.category}
           />
         ) : (
           <header className="inv-hero">

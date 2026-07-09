@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { CATEGORIES, CATEGORY_FIELDS, THEMES, THEME_LIST } from "../themes";
+import { CATEGORIES, CATEGORY_FIELDS, THEMES, THEME_LIST, PALETTES } from "../themes";
 import { InvitationView } from "../components/InvitationView";
 
 const BACKEND_BASE = process.env.REACT_APP_BACKEND_URL;
@@ -37,6 +37,7 @@ const EMPTY = {
   itinerary: [],
   audience: "todos",
   ask_phone: true,
+  color_palette: "",
 };
 
 const AUDIENCE_OPTIONS = [
@@ -61,6 +62,7 @@ export default function Builder({ editMode = false }) {
   const [expired, setExpired] = useState(false);
 
   const fieldConfig = CATEGORY_FIELDS[THEMES[inv.theme]?.category] || CATEGORY_FIELDS.cumple_infantil;
+  const themeColors = THEMES[inv.theme]?.colors || THEMES.videojuegos.colors;
 
   useEffect(() => {
     if (editMode && id && token) {
@@ -482,6 +484,32 @@ export default function Builder({ editMode = false }) {
               ))}
             </div>
             <p className="field-help">Así los invitados saben si es para niños, adultos, o toda la familia.</p>
+          </div>
+
+          <div className="field">
+            <label className="field-label">Colores de la tarjeta</label>
+            <div className="palette-picker" data-testid="palette-picker">
+              <button
+                type="button"
+                className={`palette-swatch ${!inv.color_palette ? "active" : ""}`}
+                style={{ background: `linear-gradient(135deg, ${themeColors.primary} 50%, ${themeColors.accent} 50%)` }}
+                onClick={() => setInv({ ...inv, color_palette: "" })}
+                title="Colores originales de la temática"
+                data-testid="palette-swatch-original"
+              />
+              {PALETTES.map((p) => (
+                <button
+                  type="button"
+                  key={p.id}
+                  className={`palette-swatch ${inv.color_palette === p.id ? "active" : ""}`}
+                  style={{ background: `linear-gradient(135deg, ${p.primary} 50%, ${p.accent} 50%)` }}
+                  onClick={() => setInv({ ...inv, color_palette: p.id })}
+                  title={p.name}
+                  data-testid={`palette-swatch-${p.id}`}
+                />
+              ))}
+            </div>
+            <p className="field-help">Opcional: cambia los colores de tu tarjeta sin cambiar la temática. El primer círculo son los colores originales.</p>
           </div>
 
           <label className="reveal-toggle" htmlFor="input-ask-phone">

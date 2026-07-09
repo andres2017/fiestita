@@ -199,6 +199,32 @@ class TestCreate:
         })
         assert r.status_code == 400
 
+    def test_create_color_palette_defaults_empty_and_is_settable(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_PaletteDefault",
+            "event_date": "2026-12-01", "event_time": "10:00",
+        })
+        assert r.status_code == 200, r.text
+        d = r.json()
+        edited = requests.get(f"{API}/invitations/{d['id']}/edit", params={"token": d["edit_token"]})
+        assert edited.json()["color_palette"] == ""
+
+        r2 = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_PaletteDorado",
+            "event_date": "2026-12-01", "event_time": "10:00", "color_palette": "azul_noche",
+        })
+        assert r2.status_code == 200, r2.text
+        d2 = r2.json()
+        edited2 = requests.get(f"{API}/invitations/{d2['id']}/edit", params={"token": d2["edit_token"]})
+        assert edited2.json()["color_palette"] == "azul_noche"
+
+    def test_create_rejects_invalid_color_palette(self):
+        r = requests.post(f"{API}/invitations", json={
+            "theme": "boda", "child_name": "TEST_PaletteMala",
+            "event_date": "2026-12-01", "event_time": "10:00", "color_palette": "arcoiris",
+        })
+        assert r.status_code == 400
+
     def test_create_ask_phone_defaults_true_and_is_settable(self):
         r = requests.post(f"{API}/invitations", json={
             "theme": "espacio", "child_name": "TEST_AskPhoneDefault", "age": 5,

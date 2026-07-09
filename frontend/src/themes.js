@@ -629,6 +629,23 @@ export const THEMES = {
 
 export const THEME_LIST = Object.values(THEMES);
 
+// Curated color palettes the guest-organizer can pick instead of the theme's
+// default primary/accent/soft. "" (id empty string) means "use the theme's
+// own colors" — the default for every invitation, so this is purely additive.
+// Only these three tokens are overridable: bg/surface/text/dark stay tied to
+// the theme so contrast and light/dark legibility are never at risk.
+export const PALETTES = [
+  { id: "dorado", name: "Dorado clásico", primary: "#A88763", accent: "#D4AF37", soft: "#F1E4D0" },
+  { id: "azul_noche", name: "Azul noche", primary: "#2C3E63", accent: "#5B9DFF", soft: "#A9C7FF" },
+  { id: "rosa_cuarzo", name: "Rosa cuarzo", primary: "#B8748A", accent: "#E8A6BC", soft: "#F5D9E3" },
+  { id: "verde_salvia", name: "Verde salvia", primary: "#6B8068", accent: "#A3B899", soft: "#E1E8DA" },
+  { id: "terracota", name: "Terracota", primary: "#B5654A", accent: "#E0956B", soft: "#F2D9C8" },
+  { id: "lavanda", name: "Lavanda", primary: "#7C6A96", accent: "#B4A3D1", soft: "#E8E1F2" },
+  { id: "vino", name: "Vino tinto", primary: "#6E2A3A", accent: "#B0435C", soft: "#E8C4CC" },
+  { id: "esmeralda", name: "Esmeralda", primary: "#1F6650", accent: "#3FA285", soft: "#C8E8DD" },
+];
+export const PALETTE_MAP = Object.fromEntries(PALETTES.map((p) => [p.id, p]));
+
 export function formatDateEs(dateStr) {
   if (!dateStr) return "";
   const [y, m, d] = dateStr.split("-").map(Number);

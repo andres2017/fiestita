@@ -54,6 +54,13 @@ THEME_CATEGORY = {
 }
 VALID_THEMES = set(THEME_CATEGORY.keys())
 
+# Debe reflejar exactamente los ids de PALETTES en frontend/src/themes.js. "" significa
+# "usar los colores propios de la temática" (el valor por defecto, sin override).
+VALID_PALETTES = {
+    "", "dorado", "azul_noche", "rosa_cuarzo", "verde_salvia",
+    "terracota", "lavanda", "vino", "esmeralda",
+}
+
 # --- Pagos / administración -------------------------------------------------
 # ADMIN_KEY: clave secreta para acceder al panel "Mis ventas" (header X-Admin-Key).
 # WOMPI_EVENTS_SECRET: secreto de eventos de Wompi (pestaña Programadores),
@@ -195,6 +202,8 @@ def _validate_invitation_links(data: "InvitationData") -> None:
         raise HTTPException(status_code=400, detail=f"Máximo {MAX_ITINERARY_ITEMS} momentos en el itinerario")
     if data.audience not in VALID_AUDIENCES:
         raise HTTPException(status_code=400, detail="Valor de audiencia inválido")
+    if data.color_palette not in VALID_PALETTES:
+        raise HTTPException(status_code=400, detail="Paleta de colores inválida")
 
 
 class ItineraryItem(BaseModel):
@@ -231,6 +240,7 @@ class InvitationData(BaseModel):
     itinerary: List[ItineraryItem] = Field(default_factory=list)
     audience: str = "todos"  # "ninos" | "todos" | "adultos" — who the event is for
     ask_phone: bool = True  # whether the guest RSVP form collects a phone/WhatsApp number
+    color_palette: str = ""  # optional override id from PALETTES, "" = use the theme's own colors
 
 
 class Invitation(InvitationData):

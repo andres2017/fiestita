@@ -51,6 +51,10 @@ THEME_CATEGORY = {
     "tardeo": "parche",
     "gloria": "reto_deportivo",
     "aguinaldos": "novena",
+    "aniversario": "tarjeta_regalo",
+    "amor_amistad": "tarjeta_regalo",
+    "baby_shower": "baby_shower",
+    "grado": "grado",
 }
 VALID_THEMES = set(THEME_CATEGORY.keys())
 

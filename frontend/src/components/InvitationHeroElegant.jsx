@@ -174,6 +174,28 @@ const HERO_MOTIFS = {
       <circle cx="28" cy="22" r="1.4" fill="currentColor" />
     </>
   ),
+  // baby_shower — a gentle mobile-style arc of graduated bubbles, plus a tiny rattle ring.
+  baby: (
+    <>
+      <path d="M6 28 C 12 14, 30 8, 44 15" stroke="currentColor" strokeWidth="1.05" fill="none" strokeLinecap="round" />
+      <circle cx="6" cy="28" r="2" fill="currentColor" />
+      <circle cx="15" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="27" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="38" cy="10" r="1.7" fill="currentColor" />
+      <circle cx="44" cy="15" r="1.3" fill="currentColor" />
+      <circle cx="21" cy="23" r="3.4" stroke="currentColor" strokeWidth="0.85" fill="none" />
+    </>
+  ),
+  // grado — a simple mortarboard with a hanging tassel.
+  gradCap: (
+    <>
+      <path d="M6 20 L 25 12 L 44 20 L 25 28 Z" stroke="currentColor" strokeWidth="1.05" fill="none" strokeLinejoin="round" />
+      <path d="M25 28 L 25 37" stroke="currentColor" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+      <circle cx="25" cy="39.5" r="1.8" fill="currentColor" />
+      <path d="M38 22.5 L 38 31 C 38 33.5, 34 34.5, 32 32.5" stroke="currentColor" strokeWidth="0.85" fill="none" strokeLinecap="round" />
+      <circle cx="6" cy="20" r="1.8" fill="currentColor" />
+    </>
+  ),
 };
 
 const CATEGORY_MOTIF = {
@@ -186,6 +208,9 @@ const CATEGORY_MOTIF = {
   partido: "laurelDynamic",
   reto_deportivo: "laurelDynamic",
   parche: "sprig",
+  tarjeta_regalo: "rose",
+  baby_shower: "baby",
+  grado: "gradCap",
 };
 
 function getHeroMotif(category) {

@@ -81,6 +81,12 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 }
 .landing-hero-phone-screen .inv-hero-glass { width: 100%; }
 
+.landing-hero-demo-link {
+  display: block; text-align: center; margin: 1.1rem auto 0; font-weight: 800;
+  font-size: 0.9rem; color: var(--l-secondary); text-decoration: none;
+}
+.landing-hero-demo-link:hover { text-decoration: underline; }
+
 /* "Now playing" teaser — purely decorative (no real audio), showing off what the actual
    song-player feature looks like on a finished invitation. The disc reuses the same
    spin-while-playing idea as .inv-song-disc, simplified, always "on" since this is just

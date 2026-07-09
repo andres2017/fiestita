@@ -21,6 +21,10 @@ const HERO_DEMO_STYLE_VARS = {
   "--inv-font": HERO_DEMO_THEME.font,
   "--inv-scale": HERO_DEMO_THEME.fontScale,
 };
+// Real, live invitation (same couple/theme as the preview above) — created via the
+// admin endpoint, paid:true so it's publicly viewable — behind the "Ver invitación
+// real" link, so the phone mockup isn't just a static screenshot pretending.
+const DEMO_INVITATION_ID = "e08ce410-20df-4d8a-b9a1-26a63c299f1b";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const CONTACT_WHATSAPP = "573108175926";
@@ -118,6 +122,15 @@ export default function Landing() {
               />
             </div>
           </div>
+          <a
+            href={`/i/${DEMO_INVITATION_ID}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="landing-hero-demo-link"
+            data-testid="landing-demo-link"
+          >
+            👉 Ver esta invitación real
+          </a>
           <div className="landing-nowplaying liquid-glass" data-testid="landing-nowplaying">
             <span className="landing-nowplaying-disc" aria-hidden="true" />
             <span className="landing-nowplaying-info">

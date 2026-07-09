@@ -127,6 +127,32 @@ export default function AdminVentas() {
     setInput("");
   };
 
+  const [sealOpen, setSealOpen] = useState(false);
+  const [sealSettings, setSealSettings] = useState({ die_style: "letter", letter_label: "Fiestita" });
+  const [sealSaving, setSealSaving] = useState(false);
+  const [sealError, setSealError] = useState("");
+  const [sealSaved, setSealSaved] = useState(false);
+
+  useEffect(() => {
+    if (!key) return;
+    axios.get(`${API}/settings/landing-seal`).then((r) => setSealSettings(r.data)).catch(() => {});
+  }, [key]);
+
+  const guardarSello = async (e) => {
+    e.preventDefault();
+    setSealSaving(true);
+    setSealError("");
+    setSealSaved(false);
+    try {
+      await axios.put(`${API}/settings/landing-seal`, sealSettings, { headers: { "X-Admin-Key": key } });
+      setSealSaved(true);
+    } catch (err) {
+      setSealError(err?.response?.data?.detail || "No se pudo guardar.");
+    } finally {
+      setSealSaving(false);
+    }
+  };
+
   const [manualOpen, setManualOpen] = useState(false);
   const [manualForm, setManualForm] = useState(EMPTY_MANUAL);
   const [manualCategory, setManualCategory] = useState("cumple_infantil");
@@ -348,6 +374,59 @@ export default function AdminVentas() {
                 </div>
               )}
             </>
+          )}
+        </div>
+
+        <div style={{ ...st.card, marginBottom: 24 }}>
+          <div style={st.manualHeader} onClick={() => setSealOpen(!sealOpen)} data-testid="seal-toggle">
+            <div style={st.cardLabel}>💍 Sello de la portada principal</div>
+            <span style={{ color: "#94A3B8", fontSize: 18 }}>{sealOpen ? "−" : "+"}</span>
+          </div>
+
+          {sealOpen && (
+            <form onSubmit={guardarSello}>
+              <p style={{ ...st.muted, marginTop: 10 }}>
+                Controla el sello de cera que ven los visitantes al entrar a invitacionesdigitalesfiestita.com,
+                antes de crear ninguna invitación.
+              </p>
+
+              <label style={{ ...st.label, marginTop: 14 }}>Estilo del sello</label>
+              <div style={st.categoryChips}>
+                <button
+                  type="button"
+                  style={{ ...st.categoryChip, ...(sealSettings.die_style === "letter" ? { background: "#8B5CF6", color: "#fff", borderColor: "#8B5CF6" } : {}) }}
+                  onClick={() => setSealSettings({ ...sealSettings, die_style: "letter" })}
+                  data-testid="seal-style-letter"
+                >
+                  🔤 Con letra
+                </button>
+                <button
+                  type="button"
+                  style={{ ...st.categoryChip, ...(sealSettings.die_style === "crest" ? { background: "#8B5CF6", color: "#fff", borderColor: "#8B5CF6" } : {}) }}
+                  onClick={() => setSealSettings({ ...sealSettings, die_style: "crest" })}
+                  data-testid="seal-style-crest"
+                >
+                  🛡️ Con escudo
+                </button>
+              </div>
+
+              <label style={{ ...st.label, marginTop: 14 }}>
+                {sealSettings.die_style === "crest" ? "Nombre a revelar al abrir" : "Letra / nombre (la inicial queda grabada en el sello)"}
+              </label>
+              <input
+                style={st.input}
+                value={sealSettings.letter_label}
+                onChange={(e) => setSealSettings({ ...sealSettings, letter_label: e.target.value })}
+                placeholder="Fiestita"
+                data-testid="seal-letter-input"
+              />
+
+              <button type="submit" style={{ ...st.btn, marginTop: 16, opacity: sealSaving ? 0.6 : 1 }} disabled={sealSaving} data-testid="seal-save-btn">
+                {sealSaving ? "Guardando..." : "💾 Guardar"}
+              </button>
+              {sealSaved && <span style={{ color: "#4ADE80", marginLeft: 12, fontSize: 14 }}>✓ Guardado</span>}
+              {sealError && <div style={st.error}>{sealError}</div>}
+            </form>
           )}
         </div>
 

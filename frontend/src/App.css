@@ -92,6 +92,69 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
   font-size: 0.68rem; letter-spacing: 0.2em; opacity: 0.85;
 }
 
+/* --- Mini-card decoration layers ("decórala más, hazla más llamativa") — three PNGs
+   curated from the founder's `fotos sin fondo/` grab-bag, recompressed into
+   src/assets/landing. Every layer is position:absolute + pointer-events:none, so the
+   card's 300px footprint and padding are untouched: decoration overflows or underlays,
+   it never pushes content (same trick .landing-nowplaying already uses to overflow the
+   bottom edge). */
+/* Confetti halo behind the card. Width = container + a bit, capped: on phones that's
+   ~1.25rem of spill into the page's 1.5rem side padding, so no horizontal scroll (the
+   landing has no overflow-x guard). top:44% (not 50%) because .landing-hero-img also
+   contains the demo link below the card — the card's own center sits a bit higher. */
+.landing-hero-confetti {
+  position: absolute; left: 50%; top: 44%;
+  width: calc(100% + 2.5rem); max-width: 460px; height: auto;
+  transform: translate(-50%, -50%);
+  opacity: 0.9; pointer-events: none; user-select: none;
+  animation: landing-confetti-sway 16s ease-in-out infinite alternate;
+}
+@keyframes landing-confetti-sway {
+  from { transform: translate(-50%, -50%) rotate(-2deg) scale(0.985); }
+  to { transform: translate(-50%, -50%) rotate(2deg) scale(1.015); }
+}
+/* Additive on purpose (main .landing-hero-mini block above stays untouched): a stacking
+   context lets the star layer sit at z-index:-1 — above this card's own background,
+   below its content — instead of disappearing under the card (no context) or painting
+   over the text (z-index:0+ beats static content). */
+.landing-hero-mini { isolation: isolate; }
+.landing-hero-mini-stars {
+  position: absolute; z-index: -1; inset: 6px 8px;
+  width: calc(100% - 16px); height: calc(100% - 12px);
+  object-fit: cover; object-position: center top; opacity: 0.55;
+  pointer-events: none; user-select: none;
+  /* fade the scatter away around the middle so the couple's names + date keep a calm
+     backdrop; full sparkle only near the edges */
+  -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 52%, transparent 0 30%, #000 72%);
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 52%, transparent 0 30%, #000 72%);
+  animation: landing-stars-twinkle 5.5s ease-in-out infinite alternate;
+}
+@keyframes landing-stars-twinkle {
+  from { opacity: 0.38; }
+  to { opacity: 0.68; }
+}
+/* Gold corner flourish (top-left crop of an ornate frame). The crop's hairline tails
+   run to the image edge — the radial mask fades them out instead of letting them end in
+   a chopped line. Mask is applied before transform, so the scaleX/scaleY mirrors below
+   flip ornament and fade together. Sits above the card border by design (reads as an
+   ornament mounted on the frame); badge and pill stay clear of these two corners. */
+.landing-hero-mini-corner {
+  position: absolute; width: 118px; height: auto;
+  pointer-events: none; user-select: none;
+  filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.35));
+  -webkit-mask-image: radial-gradient(140% 140% at 0% 0%, #000 52%, transparent 82%);
+  mask-image: radial-gradient(140% 140% at 0% 0%, #000 52%, transparent 82%);
+}
+.landing-hero-mini-corner-tr { top: -12px; right: -14px; transform: scaleX(-1); }
+.landing-hero-mini-corner-bl { bottom: -12px; left: -14px; transform: scaleY(-1); }
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-confetti, .landing-hero-mini-stars { animation: none; }
+}
+/* The confetti is a positioned element, so it would paint over the static demo link
+   below the card (positioned beats static regardless of DOM order). Lift the link into
+   the positioned layer above it — additive, the main rule below stays untouched. */
+.landing-hero-demo-link { position: relative; z-index: 1; }
+
 .landing-hero-demo-link {
   display: block; text-align: center; margin: 0 auto 1rem; font-weight: 800;
   font-size: 0.9rem; color: var(--l-secondary); text-decoration: none;
@@ -1177,6 +1240,15 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 }
 .reveal-elegant-die-emoji { font-size: 1.9rem; text-shadow: none; opacity: 0.92; }
 .reveal-elegant-die-emoji::before, .reveal-elegant-die-emoji::after { content: none; }
+/* Heraldic crest die (dieStyle="crest") — SVG alternative to the monogram.
+   It sits in the same .reveal-elegant-die grid, so it inherits the incised
+   color (color-mix of --inv-primary toward black) via currentColor and keeps
+   the ✦ marks above/below. text-shadow can't emboss SVG strokes, so the
+   letter's letterpress offsets are recreated with drop-shadow filters. */
+.reveal-elegant-crest {
+  display: block; width: 62px; height: auto;
+  filter: drop-shadow(0 -1px 1px rgba(0,0,0,0.5)) drop-shadow(0 1px 0 rgba(255,255,255,0.3));
+}
 
 /* One-shot hairline ring that breathes outward at the moment of the break */
 .reveal-elegant-ringpulse {
@@ -1228,6 +1300,7 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
   .reveal-elegant-ambient { width: 128px; height: 128px; }
   .reveal-elegant-die { font-size: calc(1.8rem * var(--inv-scale, 1)); }
   .reveal-elegant-die-emoji { font-size: 1.5rem; }
+  .reveal-elegant-crest { width: 48px; }
   .reveal-elegant-ribbon { min-height: 1.5rem; }
   .reveal-elegant-intro { margin-top: 1.2rem; }
   .reveal-elegant-name { font-size: calc(clamp(1.4rem, 6vh, 2rem) * var(--inv-scale, 1)); }

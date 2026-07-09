@@ -319,6 +319,16 @@ class RsvpCreate(BaseModel):
     mensaje: str = ""
 
 
+VALID_DIE_STYLES = {"letter", "crest"}
+LANDING_SEAL_DEFAULTS = {"die_style": "letter", "letter_label": "Fiestita"}
+
+
+class LandingSealSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    die_style: str = "letter"  # "letter" (monogram from letter_label) | "crest"
+    letter_label: str = "Fiestita"  # drives the monogram initial + revealed name text
+
+
 @api_router.get("/")
 async def root():
     return {"message": "Invitaciones API"}
@@ -327,6 +337,29 @@ async def root():
 @api_router.get("/pricing")
 async def get_pricing():
     return {"price_cop": INVITATION_PRICE_COP}
+
+
+@api_router.get("/settings/landing-seal")
+async def get_landing_seal_settings():
+    """Público (sin auth) — la landing lo consulta en cada carga para saber si el sello
+    de la portada debe mostrar una letra o un escudo, y qué nombre revelar."""
+    doc = await db.settings.find_one({"_id": "landing_seal"}, {"_id": 0})
+    return doc or LANDING_SEAL_DEFAULTS
+
+
+@api_router.put("/settings/landing-seal")
+async def update_landing_seal_settings(data: LandingSealSettings, request: Request):
+    """Protegido con X-Admin-Key — el panel de administración lo usa para elegir si el
+    sello de la portada principal se muestra con letra o con escudo."""
+    _require_admin(request)
+    if data.die_style not in VALID_DIE_STYLES:
+        raise HTTPException(status_code=400, detail="Estilo de sello inválido")
+    await db.settings.update_one(
+        {"_id": "landing_seal"},
+        {"$set": {"die_style": data.die_style, "letter_label": data.letter_label}},
+        upsert=True,
+    )
+    return {"ok": True}
 
 
 @api_router.post("/invitations")

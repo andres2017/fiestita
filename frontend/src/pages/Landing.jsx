@@ -3,6 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { CATEGORIES, THEME_LIST, THEMES } from "../themes";
 import { InvitationRevealElegant } from "../components/InvitationRevealElegant";
 import axios from "axios";
+// Decoration layers for the hero's mini demo card ("decórala más, hazla más llamativa").
+// Curated out of the founder's `fotos sin fondo/` grab-bag, renamed + recompressed into
+// src/assets (first local image imports in the repo — everything else is remote URLs).
+import cornerFlourishGold from "../assets/landing/corner-flourish-gold.png";
+import starsGoldScatter from "../assets/landing/stars-gold-scatter.png";
+import confettiBurst from "../assets/landing/confetti-burst.png";
 
 // Demo content for the hero's mini preview card. Same couple/theme as the public demo
 // invitation (see DEMO_INVITATION_ID below), so the two stay consistent — but this is a
@@ -46,9 +52,13 @@ export default function Landing() {
   const [priceCop, setPriceCop] = useState(null);
   const [activeCategory, setActiveCategory] = useState("todas");
   const [opened, setOpened] = useState(false);
+  // Admin-controlled from "Mis ventas" → Sello de la portada principal. Defaults match
+  // what shipped before that control existed, so nothing changes until an admin opts in.
+  const [sealSettings, setSealSettings] = useState({ die_style: "letter", letter_label: "Fiestita" });
 
   useEffect(() => {
     axios.get(`${API}/pricing`).then((r) => setPriceCop(r.data.price_cop)).catch(() => {});
+    axios.get(`${API}/settings/landing-seal`).then((r) => setSealSettings(r.data)).catch(() => {});
   }, []);
 
   const filteredThemes = activeCategory === "todas" ? THEME_LIST : THEME_LIST.filter((t) => t.category === activeCategory);
@@ -59,7 +69,8 @@ export default function Landing() {
         <InvitationRevealElegant
           emoji="🎉"
           themeName="INVITACIONES DIGITALES"
-          guestLabel="Fiestita"
+          guestLabel={sealSettings.letter_label || "Fiestita"}
+          dieStyle={sealSettings.die_style}
           dark
           onOpen={() => setOpened(true)}
         />
@@ -101,6 +112,10 @@ export default function Landing() {
           </div>
         </div>
         <div className="landing-hero-img animate-fade-up delay-5">
+          {/* Confetti halo BEHIND the card: earlier sibling in the DOM, so the card's
+              opaque body paints over the middle and only a festive multicolor ring
+              peeks out around the edges — vivid without touching in-card legibility. */}
+          <img src={confettiBurst} alt="" aria-hidden="true" className="landing-hero-confetti" data-testid="landing-hero-confetti" />
           <div
             className="landing-hero-mini"
             data-testid="landing-hero-mini"
@@ -109,6 +124,14 @@ export default function Landing() {
               borderColor: `color-mix(in srgb, ${HERO_DEMO_THEME.colors.accent} 45%, #1F2937)`,
             }}
           >
+            {/* Gold star scatter at z-index:-1 — above the card's background, below all
+                content (the card gets isolation:isolate in CSS to make that possible),
+                masked out around the middle so the names/date keep a calm backdrop. */}
+            <img src={starsGoldScatter} alt="" aria-hidden="true" className="landing-hero-mini-stars" />
+            {/* One corner crop, mirrored into the two corners the DEMO badge (top-left)
+                and now-playing pill (bottom-center) don't use. */}
+            <img src={cornerFlourishGold} alt="" aria-hidden="true" className="landing-hero-mini-corner landing-hero-mini-corner-tr" />
+            <img src={cornerFlourishGold} alt="" aria-hidden="true" className="landing-hero-mini-corner landing-hero-mini-corner-bl" />
             <span className="landing-hero-mini-badge">DEMO</span>
             <span className="landing-hero-mini-ring" aria-hidden="true">{HERO_DEMO_THEME.emoji}</span>
             <p className="landing-hero-mini-name">Isabella y Mateo</p>

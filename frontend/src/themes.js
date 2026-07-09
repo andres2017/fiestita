@@ -652,6 +652,15 @@ export const PALETTES = [
   { id: "lavanda", name: "Lavanda", primary: "#7C6A96", accent: "#B4A3D1", soft: "#E8E1F2" },
   { id: "vino", name: "Vino tinto", primary: "#6E2A3A", accent: "#B0435C", soft: "#E8C4CC" },
   { id: "esmeralda", name: "Esmeralda", primary: "#1F6650", accent: "#3FA285", soft: "#C8E8DD" },
+  { id: "turquesa", name: "Turquesa", primary: "#1C7C77", accent: "#45C4B0", soft: "#B8ECE3" },
+  { id: "naranja", name: "Naranja vívido", primary: "#B8601F", accent: "#F2953D", soft: "#FBD9AD" },
+  { id: "cielo", name: "Azul cielo", primary: "#4A7FB5", accent: "#7FB8E8", soft: "#D3E9FA" },
+  { id: "mostaza", name: "Mostaza", primary: "#A97D26", accent: "#E0A83E", soft: "#F5DFA3" },
+  { id: "grafito", name: "Grafito", primary: "#3D4148", accent: "#8B929E", soft: "#D8DCE2" },
+  { id: "cereza", name: "Rojo cereza", primary: "#8C2A3A", accent: "#D6455C", soft: "#F2C0CA" },
+  { id: "fucsia", name: "Fucsia", primary: "#8E2C6B", accent: "#D6489F", soft: "#F2C1E0" },
+  { id: "menta", name: "Verde menta", primary: "#2E8B72", accent: "#5FC9A8", soft: "#C7EEE0" },
+  { id: "cobre", name: "Cobre", primary: "#9C5A34", accent: "#D68A4E", soft: "#EFCBA3" },
 ];
 export const PALETTE_MAP = Object.fromEntries(PALETTES.map((p) => [p.id, p]));
 

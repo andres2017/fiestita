@@ -58,7 +58,8 @@ VALID_THEMES = set(THEME_CATEGORY.keys())
 # "usar los colores propios de la temática" (el valor por defecto, sin override).
 VALID_PALETTES = {
     "", "dorado", "azul_noche", "rosa_cuarzo", "verde_salvia",
-    "terracota", "lavanda", "vino", "esmeralda",
+    "terracota", "lavanda", "vino", "esmeralda", "turquesa", "naranja",
+    "cielo", "mostaza", "grafito", "cereza", "fucsia", "menta", "cobre",
 }
 
 # Debe reflejar exactamente los ids de FONTS en frontend/src/themes.js. "" significa

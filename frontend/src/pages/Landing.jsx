@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CATEGORIES, THEME_LIST } from "../themes";
+import { InvitationRevealElegant } from "../components/InvitationRevealElegant";
 import axios from "axios";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -10,16 +11,46 @@ const contactWaUrl = `https://wa.me/${CONTACT_WHATSAPP}?text=${encodeURIComponen
 )}`;
 const NEW_THEME_IDS = ["cumbre", "cielito", "llama_viva", "tardeo", "gloria", "aguinaldos"];
 
+// Brand palette for the landing page's own envelope-break intro — not tied to any
+// specific invitation theme, since this is the marketing teaser shown before the
+// visitor has picked one. Warm coral + gold, matching the app's own brand color
+// (index.html's theme-color meta is the same #FF6B6B).
+const BRAND_STYLE_VARS = {
+  "--inv-bg": "#1A0F0A",
+  "--inv-surface": "#2A1810",
+  "--inv-primary": "#FF6B6B",
+  "--inv-text": "#FFF5E8",
+  "--inv-accent": "#FFD166",
+  "--inv-soft": "#FFE3C2",
+  "--inv-font": "'Fredoka', sans-serif",
+  "--inv-scale": 1,
+};
+
 export default function Landing() {
   const navigate = useNavigate();
   const [priceCop, setPriceCop] = useState(null);
   const [activeCategory, setActiveCategory] = useState("todas");
+  const [opened, setOpened] = useState(false);
 
   useEffect(() => {
     axios.get(`${API}/pricing`).then((r) => setPriceCop(r.data.price_cop)).catch(() => {});
   }, []);
 
   const filteredThemes = activeCategory === "todas" ? THEME_LIST : THEME_LIST.filter((t) => t.category === activeCategory);
+
+  if (!opened) {
+    return (
+      <div style={BRAND_STYLE_VARS}>
+        <InvitationRevealElegant
+          emoji="🎉"
+          themeName="INVITACIONES DIGITALES"
+          guestLabel="Fiestita"
+          dark
+          onOpen={() => setOpened(true)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="landing">
@@ -30,19 +61,26 @@ export default function Landing() {
 
       <header className="landing-hero">
         <div className="landing-hero-text">
-          <span className="landing-tag">🔥 Nuevo: 6 categorías más</span>
-          <h1>Invitaciones digitales <span className="hl">para cada celebración</span></h1>
-          <p>
-            Cumpleaños, bodas, el partido, conferencias, bautizos, confirmaciones, parches, retos
-            deportivos o la novena de aguinaldos: elige una temática, escribe los datos y comparte un
-            link único con cuenta regresiva, mapa, confirmación de asistencia y botón de WhatsApp. 🎉
+          <span className="landing-tag animate-fade-up delay-1">🔥 Nuevo: Tarjeta de regalo, Baby Shower y Grado</span>
+          <h1 className="animate-fade-up delay-2">Invitaciones digitales <span className="hl">para cada celebración</span></h1>
+          <p className="animate-fade-up delay-3">
+            Cumpleaños, bodas, el partido, conferencias, bautizos, baby showers, grados o la novena
+            de aguinaldos: elige una temática, cuéntanos los datos y arma una invitación con efectos
+            espectaculares — pon la canción que quieras que suene, agrega fotos y video, y comparte
+            un link único con cuenta regresiva, mapa y confirmación de asistencia por WhatsApp. 🎉
           </p>
-          <div className="landing-cta">
+          <div className="landing-features animate-fade-up delay-3" data-testid="landing-features">
+            <span className="landing-feature-chip liquid-glass">🎵 Tu canción favorita</span>
+            <span className="landing-feature-chip liquid-glass">✨ Efectos espectaculares</span>
+            <span className="landing-feature-chip liquid-glass">📸 Fotos y video</span>
+            <span className="landing-feature-chip liquid-glass">💌 100% personalizada</span>
+          </div>
+          <div className="landing-cta animate-fade-up delay-4">
             <Link to="/crear" className="btn-primary" data-testid="hero-create-btn">🎉 Crear mi invitación</Link>
             {priceCop && <span className="landing-price">💳 Solo ${priceCop.toLocaleString("es-CO")} COP</span>}
           </div>
         </div>
-        <div className="landing-hero-img">
+        <div className="landing-hero-img animate-fade-up delay-5">
           <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?crop=entropy&cs=srgb&fm=jpg&q=85&w=900" alt="Celebración con confeti" />
         </div>
       </header>

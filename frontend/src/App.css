@@ -63,6 +63,47 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .landing-cta { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .landing-price { font-family: 'Fredoka', sans-serif; font-weight: 700; color: var(--l-secondary); font-size: 1.05rem; }
 
+/* Frosted "glass" chip — soft inset highlight + gradient hairline border, the modern
+   counterpoint to the hero's bold black-border/hard-shadow chips (.landing-tag,
+   .btn-primary). Used for the feature-highlight row so it reads as a distinct, lighter
+   register without abandoning the page's own established look. */
+.liquid-glass {
+  position: relative; background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(6px) saturate(160%); -webkit-backdrop-filter: blur(6px) saturate(160%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 8px 20px -12px rgba(31, 41, 55, 0.25);
+  overflow: hidden;
+}
+.liquid-glass::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.25) 25%,
+    rgba(255,255,255,0) 45%, rgba(255,255,255,0) 60%,
+    rgba(255,255,255,0.25) 80%, rgba(255,255,255,0.9) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none;
+}
+
+.landing-features { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0 0 1.75rem; }
+.landing-feature-chip {
+  display: inline-flex; align-items: center; gap: 0.4rem; border-radius: 9999px;
+  padding: 0.5rem 1rem; font-weight: 700; font-size: 0.85rem; color: var(--l-text);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-fade-up { animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.25s; }
+.delay-3 { animation-delay: 0.4s; }
+.delay-4 { animation-delay: 0.55s; }
+.delay-5 { animation-delay: 0.75s; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up { animation: none; }
+}
+
 .landing-themes { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 .landing-themes h2, .landing-steps h2 { font-size: 2rem; margin-bottom: 0.5rem; }
 .landing-themes-sub { color: #6B7280; margin-bottom: 2rem; }
@@ -351,23 +392,44 @@ h1, h2, h3 { font-family: 'Fredoka', sans-serif; }
 .inv-arrows { margin-top: 1.5rem; color: var(--inv-primary); animation: float 2s ease-in-out infinite; font-size: 0.9rem; }
 
 /* Organizer's own uploaded design (image/PDF/short video), shown instead of the
-   generated hero when inv.custom_invite_active is on. Full-bleed edge-to-edge,
-   breaking out of .inv-content's padding the same way .inv-hero-glass does. */
-/* align-self:center overrides the flex item's default stretch, so the pill sizes to its
-   own text (like the rest of .inv-badge) instead of spanning the full width. */
-.inv-custom-cover-badge { align-self: center; margin-bottom: 0; }
-.inv-custom-cover { margin: -2rem -1.25rem 0; background: #000; }
-.inv-custom-cover-image { width: 100%; display: block; }
-.inv-custom-cover-video { width: 100%; max-height: 80vh; display: block; background: #000; }
-.inv-custom-cover-pdf-wrap { padding: 1rem 1.25rem 0; background: none; }
-.inv-custom-cover-pdf { width: 100%; height: 70vh; border: 2px solid var(--inv-primary); border-radius: 1rem; display: block; background: #fff; }
-.inv-custom-cover-pdf-link { margin-top: 0.75rem; }
+   generated hero when inv.custom_invite_active is on. Everything (badge, media,
+   scroll cue) sits inside ONE consistent dark frame — deliberately NOT --inv-bg,
+   which swings from near-black to pastel-white across 25+ themes and would clash
+   unpredictably with whatever colors happen to live in the upload itself. The
+   frame is full-bleed (breaks out of .inv-content's padding like .inv-hero-glass
+   does); the media sits inset in a rounded "mat" with its own shadow, like a
+   framed photo, so it reads as one composed piece regardless of the upload's own
+   aspect ratio or background color. */
+.inv-custom-cover-frame {
+  margin: -2rem -1.25rem 0; padding: 1.75rem 1.25rem 2rem;
+  background: linear-gradient(180deg, #0b0b0f 0%, #18181f 100%);
+  display: flex; flex-direction: column;
+}
 
-.inv-custom-cover-scrollcue { text-align: center; padding: 0 1rem; }
-.inv-custom-cover-scrollcue-arrows { display: block; color: var(--inv-primary); animation: float 2s ease-in-out infinite; font-size: 0.9rem; }
+.inv-custom-cover-badge {
+  align-self: center; margin: 0 0 1.25rem;
+  border-color: color-mix(in srgb, var(--inv-accent) 65%, white 35%);
+  color: color-mix(in srgb, var(--inv-accent) 65%, white 35%);
+}
+
+.inv-custom-cover-mat {
+  border-radius: 1.1rem; overflow: hidden; background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 26px 54px -26px rgba(0, 0, 0, 0.75);
+}
+.inv-custom-cover-media { width: 100%; display: block; }
+.inv-custom-cover-video { max-height: 70vh; background: #000; }
+.inv-custom-cover-pdf { height: 65vh; border: none; background: #fff; }
+.inv-custom-cover-pdf-link { align-self: center; margin-top: 1rem; }
+
+.inv-custom-cover-scrollcue { text-align: center; margin-top: 1.5rem; }
+.inv-custom-cover-scrollcue-arrows {
+  display: block; color: color-mix(in srgb, var(--inv-accent) 65%, white 35%);
+  animation: float 2s ease-in-out infinite; font-size: 0.9rem;
+}
 .inv-custom-cover-scrollcue-text {
   margin: 0.5rem auto 0; max-width: 34ch; font-weight: 700; font-size: 0.85rem;
-  line-height: 1.5; color: var(--inv-text); opacity: 0.75;
+  line-height: 1.5; color: #fff; opacity: 0.72;
 }
 @media (prefers-reduced-motion: reduce) {
   .inv-custom-cover-scrollcue-arrows { animation: none; }

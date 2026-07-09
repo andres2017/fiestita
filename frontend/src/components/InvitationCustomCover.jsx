@@ -5,15 +5,14 @@
  * countdown, venue details, RSVP form, gift registry) still renders normally — this only
  * swaps out the very first thing a guest sees, controlled by inv.custom_invite_active.
  *
- * Carries the same "Tienes una invitación especial" badge every other hero variant shows
- * (InvitationHeroElegant's kicker, the plain .inv-hero's badge) — a raw uploaded image with
- * no framing above it read as broken/unfinished, so the badge stays even when the cover
- * itself is fully custom.
- *
- * Also carries a "keep scrolling" nudge below the upload: the organizer's own design
- * usually already looks complete on its own (it has its own date/venue baked in as an
- * image), so without a cue a guest has no reason to suspect there's a whole page of real
- * content (video, photos, countdown, RSVP form) still below it.
+ * Everything (badge, media, scroll cue) sits inside ONE consistent dark frame — not the
+ * theme's own --inv-bg, which swings from near-black to pastel-white across 25+ themes and
+ * would clash unpredictably with whatever colors happen to be in the organizer's upload
+ * (a first version put the badge directly on --inv-bg and the media edge-to-edge on a
+ * separate #000 slab; on a light-background upload the seam between them read as two
+ * mismatched bars sandwiching the image, not one composed piece). The media itself sits
+ * inset with rounded corners + shadow, like a photo in a mat, so it reads as "framed" no
+ * matter what colors or aspect ratio the upload has.
  *
  * Props:
  *   url    string   absolute URL to the uploaded file (already resolved via mediaUrl)
@@ -25,51 +24,51 @@ export const InvitationCustomCover = ({ url, type }) => {
   let media;
   if (type === "video") {
     media = (
-      <section className="inv-custom-cover" data-testid="inv-custom-cover">
-        <video
-          src={url}
-          controls
-          playsInline
-          className="inv-custom-cover-video"
-          data-testid="inv-custom-cover-video"
-        />
-      </section>
+      <video
+        src={url}
+        controls
+        playsInline
+        className="inv-custom-cover-media inv-custom-cover-video"
+        data-testid="inv-custom-cover-video"
+      />
     );
   } else if (type === "pdf") {
     media = (
-      <section className="inv-custom-cover inv-custom-cover-pdf-wrap" data-testid="inv-custom-cover">
+      <>
         <iframe
           src={url}
           title="Invitación"
-          className="inv-custom-cover-pdf"
+          className="inv-custom-cover-media inv-custom-cover-pdf"
           data-testid="inv-custom-cover-pdf"
         />
         <a href={url} target="_blank" rel="noopener noreferrer" className="inv-btn inv-btn-outline inv-custom-cover-pdf-link">
           Ver invitación en PDF
         </a>
-      </section>
+      </>
     );
   } else {
     media = (
-      <section className="inv-custom-cover" data-testid="inv-custom-cover">
-        <img src={url} alt="Invitación" className="inv-custom-cover-image" data-testid="inv-custom-cover-image" />
-      </section>
+      <img src={url} alt="Invitación" className="inv-custom-cover-media inv-custom-cover-image" data-testid="inv-custom-cover-image" />
     );
   }
 
   return (
-    <>
+    <section className="inv-custom-cover-frame" data-testid="inv-custom-cover">
       <div className="inv-badge inv-custom-cover-badge" data-testid="inv-badge">
         Tienes una invitación especial
       </div>
-      {media}
+
+      <div className="inv-custom-cover-mat">
+        {media}
+      </div>
+
       <div className="inv-custom-cover-scrollcue" data-testid="inv-custom-cover-scrollcue">
         <span className="inv-custom-cover-scrollcue-arrows">▼ ▼ ▼</span>
         <p className="inv-custom-cover-scrollcue-text">
           Desliza hacia abajo para ver la fecha, el lugar y confirmar tu asistencia
         </p>
       </div>
-    </>
+    </section>
   );
 };
 

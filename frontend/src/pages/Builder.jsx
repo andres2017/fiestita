@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 import { CATEGORIES, CATEGORY_FIELDS, THEMES, THEME_LIST, PALETTES, FONTS, ELEGANT_HERO_CATEGORIES } from "../themes";
 import { InvitationView } from "../components/InvitationView";
 
@@ -352,16 +353,23 @@ export default function Builder({ editMode = false }) {
           )}
 
           <label className="field-label">Temática</label>
-          <div className="theme-picker" data-testid="theme-picker">
-            {THEME_LIST.filter((t) => t.category === selectedCategory).map((t) => (
-              <button type="button" key={t.id}
-                className={`theme-chip ${inv.theme === t.id ? "active" : ""}`}
-                onClick={() => setInv({ ...inv, theme: t.id })}
-                data-testid={`theme-chip-${t.id}`}>
-                <span>{t.emoji}</span> {t.name}
-              </button>
-            ))}
-          </div>
+          <motion.div className="theme-picker" data-testid="theme-picker" layout transition={{ duration: 0.25, ease: "easeOut" }}>
+            <AnimatePresence initial={false}>
+              {THEME_LIST.filter((t) => t.category === selectedCategory).map((t) => (
+                <motion.button
+                  type="button" key={t.id} layout
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className={`theme-chip ${inv.theme === t.id ? "active" : ""}`}
+                  onClick={() => setInv({ ...inv, theme: t.id })}
+                  data-testid={`theme-chip-${t.id}`}>
+                  <span>{t.emoji}</span> {t.name}
+                </motion.button>
+              ))}
+            </AnimatePresence>
+          </motion.div>
 
           <label className="reveal-toggle" htmlFor="input-reveal-effect">
             <input
